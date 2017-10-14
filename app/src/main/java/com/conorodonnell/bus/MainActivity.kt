@@ -48,7 +48,8 @@ class MainActivity : AppCompatActivity() {
         false
     }
 
-    private var database: AppDatabase = Room.databaseBuilder(this, AppDatabase::class.java, "bus").build()
+    private var database: AppDatabase = Room.databaseBuilder(this, AppDatabase::class.java, "bus")
+            .build()
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
