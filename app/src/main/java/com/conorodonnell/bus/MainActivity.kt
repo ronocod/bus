@@ -111,6 +111,7 @@ class MainActivity : AppCompatActivity() {
     }
 
     private fun updateBusData(stopId: String) {
+        message.text = "Loading..."
         busService.fetchRealTimeInfo(stopId)
                 .map { it.results.joinToString("\n") { it.formatBusInfo() } }
                 .subscribeOn(Schedulers.io())
