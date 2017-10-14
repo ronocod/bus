@@ -9,6 +9,7 @@ import android.support.design.widget.BottomNavigationView
 import android.support.v4.content.ContextCompat
 import android.support.v4.content.PermissionChecker.PERMISSION_GRANTED
 import android.support.v7.app.AppCompatActivity
+import android.view.View
 import android.view.inputmethod.EditorInfo
 import android.view.inputmethod.InputMethodManager
 import android.widget.Toast
@@ -38,15 +39,15 @@ class MainActivity : AppCompatActivity() {
     private val navigationItemSelectedListener = BottomNavigationView.OnNavigationItemSelectedListener { item ->
         when (item.itemId) {
             R.id.navigation_home -> {
-                message.setText(R.string.title_home)
+                busInfoText.setText(R.string.title_home)
                 return@OnNavigationItemSelectedListener true
             }
             R.id.navigation_dashboard -> {
-                message.setText(R.string.title_dashboard)
+                busInfoText.setText(R.string.title_dashboard)
                 return@OnNavigationItemSelectedListener true
             }
             R.id.navigation_notifications -> {
-                message.setText(R.string.title_notifications)
+                busInfoText.setText(R.string.title_notifications)
                 return@OnNavigationItemSelectedListener true
             }
         }
@@ -83,8 +84,30 @@ class MainActivity : AppCompatActivity() {
             loadStop(stopField.text.toString())
         }
         locationButton.setOnClickListener {
-            loadNearest()
+            if (mapView.visibility == View.GONE) {
+                busInfoText.visibility = View.GONE
+                mapView.visibility = View.VISIBLE
+            } else {
+                busInfoText.visibility = View.VISIBLE
+                mapView.visibility = View.GONE
+            }
         }
+        mapView.onCreate(savedInstanceState)
+        mapView.getMapAsync { map ->
+            if (ContextCompat.checkSelfPermission(this, ACCESS_FINE_LOCATION) != PERMISSION_GRANTED) {
+                map.isMyLocationEnabled = true
+            }
+        }
+    }
+
+    override fun onResume() {
+        super.onResume()
+        mapView.onResume()
+    }
+
+    override fun onPause() {
+        super.onPause()
+        mapView.onPause()
     }
 
     override fun onRequestPermissionsResult(requestCode: Int, permissions: Array<out String>, grantResults: IntArray) {
@@ -99,8 +122,7 @@ class MainActivity : AppCompatActivity() {
     }
 
     private fun loadNearest() {
-        val result = ContextCompat.checkSelfPermission(this, ACCESS_FINE_LOCATION)
-        if (result != PERMISSION_GRANTED) {
+        if (ContextCompat.checkSelfPermission(this, ACCESS_FINE_LOCATION) != PERMISSION_GRANTED) {
             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
                 requestPermissions(arrayOf(ACCESS_FINE_LOCATION), 17)
             }
@@ -155,14 +177,14 @@ class MainActivity : AppCompatActivity() {
     }
 
     private fun updateBusData(stopId: String) {
-        message.text = "Loading..."
+        busInfoText.text = "Loading..."
         busService.fetchRealTimeInfo(stopId)
                 .map { it.results.joinToString("\n") { it.formatBusInfo() } }
                 .subscribeOn(Schedulers.io())
                 .observeOn(AndroidSchedulers.mainThread())
                 .safely {
                     subscribe({
-                        message.text = it
+                        busInfoText.text = it
                         fetchButton.isEnabled = true
                     }, {
                         fetchButton.isEnabled = true
