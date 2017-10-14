@@ -52,6 +52,7 @@
         android:layout_height="wrap_content"
         android:layout_marginLeft="8dp"
         android:layout_marginRight="8dp"
+        android:focusedByDefault="false"
         android:hint="Enter stop ID"
         android:imeOptions="actionDone"
         android:inputType="number"

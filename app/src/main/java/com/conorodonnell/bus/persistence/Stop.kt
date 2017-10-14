@@ -8,6 +8,6 @@ data class Stop(
         @PrimaryKey
         val id: String,
         val name: String,
-        val latitude: Float,
-        val longitude: Float
+        val latitude: Double,
+        val longitude: Double
 )

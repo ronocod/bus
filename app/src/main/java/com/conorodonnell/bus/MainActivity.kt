@@ -9,6 +9,7 @@ import android.support.design.widget.BottomNavigationView
 import android.support.v4.content.ContextCompat
 import android.support.v4.content.PermissionChecker.PERMISSION_GRANTED
 import android.support.v7.app.AppCompatActivity
+import android.util.Log
 import android.view.View
 import android.view.inputmethod.EditorInfo
 import android.view.inputmethod.InputMethodManager
@@ -20,6 +21,10 @@ import com.conorodonnell.bus.api.StopInfo
 import com.conorodonnell.bus.persistence.AppDatabase
 import com.conorodonnell.bus.persistence.Stop
 import com.google.android.gms.location.LocationServices
+import com.google.android.gms.maps.CameraUpdateFactory
+import com.google.android.gms.maps.GoogleMap
+import com.google.android.gms.maps.model.LatLng
+import com.google.android.gms.maps.model.MarkerOptions
 import io.reactivex.Maybe
 import io.reactivex.Observable
 import io.reactivex.Single
@@ -28,7 +33,7 @@ import io.reactivex.disposables.CompositeDisposable
 import io.reactivex.disposables.Disposable
 import io.reactivex.schedulers.Schedulers
 import kotlinx.android.synthetic.main.activity_main.*
-import java.lang.Float.parseFloat
+import java.lang.Double.parseDouble
 
 
 class MainActivity : AppCompatActivity() {
@@ -84,19 +89,68 @@ class MainActivity : AppCompatActivity() {
             loadStop(stopField.text.toString())
         }
         locationButton.setOnClickListener {
-            if (mapView.visibility == View.GONE) {
-                busInfoText.visibility = View.GONE
-                mapView.visibility = View.VISIBLE
-            } else {
-                busInfoText.visibility = View.VISIBLE
-                mapView.visibility = View.GONE
-            }
+            switchUi()
         }
         mapView.onCreate(savedInstanceState)
         mapView.getMapAsync { map ->
-            if (ContextCompat.checkSelfPermission(this, ACCESS_FINE_LOCATION) != PERMISSION_GRANTED) {
-                map.isMyLocationEnabled = true
+            setupMap(map)
+        }
+    }
+
+    private fun setupMap(map: GoogleMap) {
+        map.setOnInfoWindowClickListener { marker ->
+            switchUi()
+            loadStop(marker.snippet)
+        }
+        var lastUpdateTime = System.currentTimeMillis()
+        map.setOnCameraMoveListener {
+            val now = System.currentTimeMillis()
+            if (now - lastUpdateTime < 500) {
+                return@setOnCameraMoveListener
             }
+            lastUpdateTime = now
+            val target = map.cameraPosition.target
+            loadNearestStops(target.latitude, target.longitude) { list ->
+                addStopsToList(map, list)
+            }
+        }
+        if (ContextCompat.checkSelfPermission(this, ACCESS_FINE_LOCATION) != PERMISSION_GRANTED) {
+            map.animateCamera(CameraUpdateFactory.newLatLngZoom(LatLng(53.36, -6.25), 12f))
+            return
+        }
+        map.isMyLocationEnabled = true
+        map.uiSettings.isMyLocationButtonEnabled = true
+
+        LocationServices.getFusedLocationProviderClient(this)
+                .lastLocation
+                .addOnSuccessListener { location ->
+                    val latLng = LatLng(location.latitude, location.longitude)
+                    map.animateCamera(CameraUpdateFactory.newLatLngZoom(latLng, 15f))
+                }
+//        loadNearest { list -> addStopsToList(map, list) }
+    }
+
+    private fun addStopsToList(map: GoogleMap, list: MutableList<Stop>) {
+        map.clear()
+        list.forEach { stop ->
+            map.addMarker(MarkerOptions()
+                    .snippet(stop.id)
+                    .title("${stop.id} - ${stop.name}")
+                    .position(LatLng(stop.latitude, stop.longitude)))
+        }
+    }
+
+    private fun switchUi() {
+        if (ContextCompat.checkSelfPermission(this, ACCESS_FINE_LOCATION) != PERMISSION_GRANTED
+                && Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
+            requestPermissions(arrayOf(ACCESS_FINE_LOCATION), 17)
+        }
+        if (mapView.visibility == View.GONE) {
+            busInfoText.visibility = View.GONE
+            mapView.visibility = View.VISIBLE
+        } else {
+            busInfoText.visibility = View.VISIBLE
+            mapView.visibility = View.GONE
         }
     }
 
@@ -117,11 +171,13 @@ class MainActivity : AppCompatActivity() {
             return
         }
         if (grantResults.first() == PERMISSION_GRANTED) {
-            loadNearest()
+            loadNearest { list ->
+                loadStop(list.first().id)
+            }
         }
     }
 
-    private fun loadNearest() {
+    private fun loadNearest(callback: (MutableList<Stop>) -> Unit) {
         if (ContextCompat.checkSelfPermission(this, ACCESS_FINE_LOCATION) != PERMISSION_GRANTED) {
             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
                 requestPermissions(arrayOf(ACCESS_FINE_LOCATION), 17)
@@ -131,18 +187,21 @@ class MainActivity : AppCompatActivity() {
         LocationServices.getFusedLocationProviderClient(this)
                 .lastLocation
                 .addOnSuccessListener { location ->
+                    Log.d("Conor", "Location: $location")
                     if (location == null) {
                         return@addOnSuccessListener
                     }
-                    database.stops()
-                            .findNearest(location.latitude, location.longitude)
-                            .filter { it.isNotEmpty() }
-                            .subscribeOn(Schedulers.io())
-                            .observeOn(AndroidSchedulers.mainThread())
-                            .subscribe({ list ->
-                                loadStop(list.first().id)
-                            }, Throwable::printStackTrace)
+                    loadNearestStops(location.latitude, location.longitude, callback)
                 }
+    }
+
+    private fun loadNearestStops(latitude: Double, longitude: Double, callback: (MutableList<Stop>) -> Unit) {
+        database.stops()
+                .findNearest(latitude, longitude)
+                .filter { it.isNotEmpty() }
+                .subscribeOn(Schedulers.io())
+                .observeOn(AndroidSchedulers.mainThread())
+                .subscribe(callback, Throwable::printStackTrace)
     }
 
     fun hideKeyboard() {
@@ -196,7 +255,7 @@ class MainActivity : AppCompatActivity() {
 
     private fun RealTimeBusInfo.formatBusInfo() = "$route to $destination | ${formatDueTime()}"
 
-    private fun StopInfo.toEntity(): Stop = Stop(stopid, fullname, parseFloat(latitude), parseFloat(longitude))
+    private fun StopInfo.toEntity(): Stop = Stop(stopid, fullname, parseDouble(latitude), parseDouble(longitude))
 
     private fun <T> Observable<T>.safely(subscription: Observable<T>.() -> Disposable) =
             disposable.add(subscription())
