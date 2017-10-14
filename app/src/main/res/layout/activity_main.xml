@@ -38,6 +38,8 @@
         android:id="@+id/stopField"
         android:layout_width="0dp"
         android:layout_height="wrap_content"
+        android:layout_marginLeft="8dp"
+        android:layout_marginRight="8dp"
         android:hint="Enter stop ID"
         android:imeOptions="actionDone"
         android:inputType="number"
@@ -54,6 +56,17 @@
         android:textColor="@android:color/holo_blue_dark"
         app:layout_constraintBottom_toTopOf="@id/navigation"
         app:layout_constraintLeft_toRightOf="@id/stopField"
+        app:layout_constraintRight_toLeftOf="@id/locationButton"/>
+
+    <Button
+        android:id="@+id/locationButton"
+        style="@style/Widget.AppCompat.Button.Borderless"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="Nearest"
+        android:textColor="@android:color/holo_blue_dark"
+        app:layout_constraintBottom_toTopOf="@id/navigation"
+        app:layout_constraintLeft_toRightOf="@id/fetchButton"
         app:layout_constraintRight_toRightOf="parent"/>
 
 </android.support.constraint.ConstraintLayout>

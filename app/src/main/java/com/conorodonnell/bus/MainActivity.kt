@@ -1,9 +1,13 @@
 package com.conorodonnell.bus
 
+import android.Manifest.permission.ACCESS_FINE_LOCATION
 import android.arch.persistence.room.Room
 import android.content.Context
+import android.os.Build
 import android.os.Bundle
 import android.support.design.widget.BottomNavigationView
+import android.support.v4.content.ContextCompat
+import android.support.v4.content.PermissionChecker.PERMISSION_GRANTED
 import android.support.v7.app.AppCompatActivity
 import android.view.inputmethod.EditorInfo
 import android.view.inputmethod.InputMethodManager
@@ -14,6 +18,7 @@ import com.conorodonnell.bus.api.RealTimeBusInfo
 import com.conorodonnell.bus.api.StopInfo
 import com.conorodonnell.bus.persistence.AppDatabase
 import com.conorodonnell.bus.persistence.Stop
+import com.google.android.gms.location.LocationServices
 import io.reactivex.Maybe
 import io.reactivex.Observable
 import io.reactivex.Single
@@ -69,14 +74,53 @@ class MainActivity : AppCompatActivity() {
         navigation.setOnNavigationItemSelectedListener(navigationItemSelectedListener)
         stopField.setOnEditorActionListener { _, actionId, _ ->
             if (actionId == EditorInfo.IME_ACTION_DONE) {
-                loadStop()
+                loadStop(stopField.text.toString())
                 true
             } else false
         }
 
         fetchButton.setOnClickListener {
-            loadStop()
+            loadStop(stopField.text.toString())
         }
+        locationButton.setOnClickListener {
+            loadNearest()
+        }
+    }
+
+    override fun onRequestPermissionsResult(requestCode: Int, permissions: Array<out String>, grantResults: IntArray) {
+        super.onRequestPermissionsResult(requestCode, permissions, grantResults)
+
+        if (grantResults.isEmpty()) {
+            return
+        }
+        if (grantResults.first() == PERMISSION_GRANTED) {
+            loadNearest()
+        }
+    }
+
+    private fun loadNearest() {
+        val result = ContextCompat.checkSelfPermission(this, ACCESS_FINE_LOCATION)
+        if (result != PERMISSION_GRANTED) {
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
+                requestPermissions(arrayOf(ACCESS_FINE_LOCATION), 17)
+            }
+            return
+        }
+        LocationServices.getFusedLocationProviderClient(this)
+                .lastLocation
+                .addOnSuccessListener { location ->
+                    if (location == null) {
+                        return@addOnSuccessListener
+                    }
+                    database.stops()
+                            .findNearest(location.latitude, location.longitude)
+                            .filter { it.isNotEmpty() }
+                            .subscribeOn(Schedulers.io())
+                            .observeOn(AndroidSchedulers.mainThread())
+                            .subscribe({ list ->
+                                loadStop(list.first().id)
+                            }, Throwable::printStackTrace)
+                }
     }
 
     fun hideKeyboard() {
@@ -92,8 +136,7 @@ class MainActivity : AppCompatActivity() {
         disposable.clear()
     }
 
-    private fun loadStop() {
-        val stopId = stopField.text.toString()
+    private fun loadStop(stopId: String) {
         fetchButton.isEnabled = false
         database.stops().findById(stopId)
                 .subscribeOn(Schedulers.io())
