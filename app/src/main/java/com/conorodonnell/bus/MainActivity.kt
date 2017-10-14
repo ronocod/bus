@@ -78,13 +78,14 @@ class MainActivity : AppCompatActivity() {
     private fun loadStop() {
         hideKeyboard()
         val stopId = stopField.text.toString()
-        title = "$stopId - Loading..."
+        fetchButton.isEnabled = false
         busService.fetchRealTimeInfo(stopId)
                 .map { it.results.joinToString("\n") { it.formatBusInfo() } }
                 .subscribeOn(Schedulers.io())
                 .observeOn(AndroidSchedulers.mainThread())
                 .subscribe({
                     message.text = it
+                    fetchButton.isEnabled = true
                 }, Throwable::printStackTrace)
 
         database.stops().findById(stopId)
