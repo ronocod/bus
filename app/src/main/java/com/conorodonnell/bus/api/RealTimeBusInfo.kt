@@ -1,4 +1,4 @@
-package com.conorodonnell.bus
+package com.conorodonnell.bus.api
 
 data class RealTimeBusInfo(
         val arrivaldatetime: String,

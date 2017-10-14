@@ -1,4 +1,4 @@
-package com.conorodonnell.bus
+package com.conorodonnell.bus.api
 
 import io.reactivex.Observable
 import retrofit2.http.GET

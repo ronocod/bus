@@ -1,4 +1,4 @@
-package com.conorodonnell.bus
+package com.conorodonnell.bus.api
 
 import okhttp3.OkHttpClient
 import okhttp3.logging.HttpLoggingInterceptor
