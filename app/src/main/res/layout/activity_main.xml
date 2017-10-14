@@ -29,6 +29,7 @@
         android:layout_marginEnd="0dp"
         android:layout_marginStart="0dp"
         android:background="?android:attr/windowBackground"
+        android:visibility="gone"
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintLeft_toLeftOf="parent"
         app:layout_constraintRight_toRightOf="parent"
@@ -39,17 +40,19 @@
         android:layout_width="0dp"
         android:layout_height="wrap_content"
         android:hint="Enter stop ID"
+        android:imeOptions="actionDone"
+        android:inputType="number"
         app:layout_constraintBottom_toTopOf="@id/navigation"
         app:layout_constraintLeft_toLeftOf="parent"
         app:layout_constraintRight_toLeftOf="@id/fetchButton"/>
 
     <Button
         android:id="@+id/fetchButton"
-        android:textColor="@android:color/holo_blue_dark"
         style="@style/Widget.AppCompat.Button.Borderless"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:text="Fetch"
+        android:textColor="@android:color/holo_blue_dark"
         app:layout_constraintBottom_toTopOf="@id/navigation"
         app:layout_constraintLeft_toRightOf="@id/stopField"
         app:layout_constraintRight_toRightOf="parent"/>
