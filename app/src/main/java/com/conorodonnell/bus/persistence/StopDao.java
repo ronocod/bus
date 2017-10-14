@@ -20,14 +20,17 @@ public interface StopDao {
     Single<Stop> findById(String id);
 
     @Query("SELECT * FROM Stop " +
-            "WHERE latitude > :top AND latitude < :bottom " +
-            "AND longitude > :left AND longitude < :right")
+            "WHERE (latitude BETWEEN MIN(:top, :bottom) AND MAX(:top, :bottom)) " +
+            "AND (longitude BETWEEN MIN(:left, :right) AND MAX(:left, :right))")
     Single<List<Stop>> findInArea(double top, double bottom, double left, double right);
 
     @SuppressWarnings(RoomWarnings.CURSOR_MISMATCH)
     @Query("SELECT *, (ABS(latitude - :latitude) +  ABS(longitude - :longitude)) as distance FROM Stop " +
-            "ORDER BY distance ASC LIMIT 20")
+            "ORDER BY distance ASC LIMIT 200")
     Single<List<Stop>> findNearest(double latitude, double longitude);
+
+    @Query("SELECT * FROM Stop ")
+    Single<List<Stop>> findAll();
 
     @Insert(onConflict = OnConflictStrategy.REPLACE)
     void insertAll(List<Stop> stops);

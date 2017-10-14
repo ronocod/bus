@@ -24,7 +24,8 @@ import com.google.android.gms.location.LocationServices
 import com.google.android.gms.maps.CameraUpdateFactory
 import com.google.android.gms.maps.GoogleMap
 import com.google.android.gms.maps.model.LatLng
-import com.google.android.gms.maps.model.MarkerOptions
+import com.google.maps.android.clustering.ClusterItem
+import com.google.maps.android.clustering.ClusterManager
 import io.reactivex.Maybe
 import io.reactivex.Observable
 import io.reactivex.Single
@@ -98,24 +99,31 @@ class MainActivity : AppCompatActivity() {
     }
 
     private fun setupMap(map: GoogleMap) {
-        map.setOnInfoWindowClickListener { marker ->
+        val clusterManager = ClusterManager<StopMarker>(this, map)
+
+        clusterManager.setOnClusterItemInfoWindowClickListener { item ->
             switchUi()
-            loadStop(marker.snippet)
+            loadStop(item.stopId)
         }
-        var lastUpdateTime = System.currentTimeMillis()
-        map.setOnCameraMoveListener {
-            val now = System.currentTimeMillis()
-            if (now - lastUpdateTime < 500) {
-                return@setOnCameraMoveListener
-            }
-            lastUpdateTime = now
-            val target = map.cameraPosition.target
-            loadNearestStops(target.latitude, target.longitude) { list ->
-                addStopsToList(map, list)
-            }
-        }
+        // Point the map's listeners at the listeners implemented by the cluster
+        // manager.
+        map.setOnCameraIdleListener(clusterManager)
+        map.setOnMarkerClickListener(clusterManager)
+
+//        var userDidMove = false
+//        map.setOnCameraMoveStartedListener { reason ->
+//            userDidMove = reason == REASON_GESTURE
+//        }
+//        map.setOnCameraIdleListener {
+//            if (userDidMove) {
+//                loadStopsInView(map)
+//                userDidMove = false
+//            }
+//        }
         if (ContextCompat.checkSelfPermission(this, ACCESS_FINE_LOCATION) != PERMISSION_GRANTED) {
-            map.animateCamera(CameraUpdateFactory.newLatLngZoom(LatLng(53.36, -6.25), 12f))
+            val latLng = LatLng(53.36, -6.25)
+            map.animateCamera(CameraUpdateFactory.newLatLngZoom(latLng, 12f))
+            loadStopsInView(latLng, clusterManager)
             return
         }
         map.isMyLocationEnabled = true
@@ -126,17 +134,46 @@ class MainActivity : AppCompatActivity() {
                 .addOnSuccessListener { location ->
                     val latLng = LatLng(location.latitude, location.longitude)
                     map.animateCamera(CameraUpdateFactory.newLatLngZoom(latLng, 15f))
+                    loadStopsInView(latLng, clusterManager)
                 }
-//        loadNearest { list -> addStopsToList(map, list) }
+
     }
 
-    private fun addStopsToList(map: GoogleMap, list: MutableList<Stop>) {
-        map.clear()
-        list.forEach { stop ->
-            map.addMarker(MarkerOptions()
-                    .snippet(stop.id)
-                    .title("${stop.id} - ${stop.name}")
-                    .position(LatLng(stop.latitude, stop.longitude)))
+    data class StopMarker(
+            val stopPosition: LatLng,
+            val stopId: String,
+            val stopName: String
+    ) : ClusterItem {
+        override fun getPosition(): LatLng {
+            return stopPosition
+        }
+
+        override fun getSnippet(): String {
+            return stopName
+        }
+
+        override fun getTitle(): String {
+            return stopId
+        }
+    }
+
+    private fun loadStopsInView(position: LatLng, clusterManager: ClusterManager<StopMarker>) {
+        loadStopsIn(position)
+                .subscribe({ list: MutableList<Stop> ->
+                    addMarkersForStops(list, clusterManager)
+                }, Throwable::printStackTrace)
+    }
+
+
+    private fun addMarkersForStops(stops: MutableList<Stop>, clusterManager: ClusterManager<StopMarker>) {
+        clusterManager.clearItems()
+        try {
+            for (stop in stops) {
+                val latLng = LatLng(stop.latitude, stop.longitude)
+                clusterManager.addItem(StopMarker(latLng, stop.id, stop.name))
+            }
+        } catch (e: Exception) {
+            e.printStackTrace()
         }
     }
 
@@ -202,6 +239,13 @@ class MainActivity : AppCompatActivity() {
                 .subscribeOn(Schedulers.io())
                 .observeOn(AndroidSchedulers.mainThread())
                 .subscribe(callback, Throwable::printStackTrace)
+    }
+
+    private fun loadStopsIn(position: LatLng): Maybe<MutableList<Stop>> {
+        return database.stops()
+                .findNearest(position.latitude, position.longitude)
+                .filter { it.isNotEmpty() }
+                .subscribeOn(Schedulers.io())
     }
 
     fun hideKeyboard() {
