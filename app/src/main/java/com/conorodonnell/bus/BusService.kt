@@ -11,6 +11,6 @@ interface BusService {
     @GET("busstopinformation")
     fun fetchStop(@Query("stopid") stopId: String): Observable<StopResult>
 
-    @GET("busstopinformation")
-    fun fetchAllStops(): Observable<StopResult>
+    @GET("busstopinformation?operator=bac")
+    fun fetchAllBusStops(): Observable<StopResult>
 }

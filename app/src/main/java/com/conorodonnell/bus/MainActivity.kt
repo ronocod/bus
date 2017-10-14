@@ -1,15 +1,19 @@
 package com.conorodonnell.bus
 
+import android.arch.persistence.room.Room
 import android.content.Context
 import android.os.Bundle
 import android.support.design.widget.BottomNavigationView
 import android.support.v7.app.AppCompatActivity
 import android.view.inputmethod.EditorInfo
 import android.view.inputmethod.InputMethodManager
+import com.conorodonnell.bus.persistence.AppDatabase
+import com.conorodonnell.bus.persistence.Stop
 import io.reactivex.android.schedulers.AndroidSchedulers
 import io.reactivex.disposables.CompositeDisposable
 import io.reactivex.schedulers.Schedulers
 import kotlinx.android.synthetic.main.activity_main.*
+import java.lang.Float.parseFloat
 
 
 class MainActivity : AppCompatActivity() {
@@ -35,9 +39,20 @@ class MainActivity : AppCompatActivity() {
         false
     }
 
+    private var database: AppDatabase = Room.databaseBuilder(this, AppDatabase::class.java, "bus").build()
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_main)
+
+        database.stops().count()
+                .filter { it == 0 }
+                .subscribeOn(Schedulers.io())
+                .subscribe {
+                    busService.fetchAllBusStops()
+                            .subscribeOn(Schedulers.io())
+                            .forEach { database.stops().insertAll(it.results.map { it.toEntity() }) }
+                }
 
         navigation.setOnNavigationItemSelectedListener(navigationItemSelectedListener)
         stopField.setOnEditorActionListener { _, actionId, _ ->
@@ -72,17 +87,18 @@ class MainActivity : AppCompatActivity() {
                     message.text = it
                 }, Throwable::printStackTrace)
 
-        busService.fetchStop(stopId)
+        database.stops().findById(stopId)
                 .subscribeOn(Schedulers.io())
                 .observeOn(AndroidSchedulers.mainThread())
                 .subscribe({
-                    if (it.results.isNotEmpty()) {
-                        title = "$stopId ${it.results.first().fullname}"
-                    }
+                    title = "$stopId ${it.name}"
                 }, Throwable::printStackTrace)
     }
 
+
     private fun RealTimeBusInfo.formatBusInfo() = "$route to $destination | ${formatDueTime()}"
+
+    private fun StopInfo.toEntity(): Stop = Stop(stopid, fullname, parseFloat(latitude), parseFloat(longitude))
 
     private fun RealTimeBusInfo.formatDueTime() =
             when (duetime) {
