@@ -93,7 +93,6 @@ class MainActivity : AppCompatActivity() {
     }
 
     private fun loadStop() {
-        hideKeyboard()
         val stopId = stopField.text.toString()
         fetchButton.isEnabled = false
         database.stops().findById(stopId)
@@ -103,6 +102,7 @@ class MainActivity : AppCompatActivity() {
                     subscribe({
                         title = "$stopId ${it.name}"
                         updateBusData(stopId)
+                        hideKeyboard()
                     }, {
                         Toast.makeText(this@MainActivity, "Stop $stopId doesn't exist", LENGTH_SHORT).show()
                         it.printStackTrace()
