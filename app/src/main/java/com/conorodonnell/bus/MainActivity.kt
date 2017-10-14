@@ -4,18 +4,18 @@ import android.content.Context
 import android.os.Bundle
 import android.support.design.widget.BottomNavigationView
 import android.support.v7.app.AppCompatActivity
-import android.util.Log
 import android.view.inputmethod.EditorInfo
 import android.view.inputmethod.InputMethodManager
+import io.reactivex.android.schedulers.AndroidSchedulers
+import io.reactivex.disposables.CompositeDisposable
+import io.reactivex.schedulers.Schedulers
 import kotlinx.android.synthetic.main.activity_main.*
-import retrofit2.Call
-import retrofit2.Callback
-import retrofit2.Response
 
 
 class MainActivity : AppCompatActivity() {
 
     private val busService = Core.service()
+    private val disposable = CompositeDisposable()
 
     private val navigationItemSelectedListener = BottomNavigationView.OnNavigationItemSelectedListener { item ->
         when (item.itemId) {
@@ -65,47 +65,21 @@ class MainActivity : AppCompatActivity() {
         val stopId = stopField.text.toString()
         title = "$stopId - Loading..."
         busService.fetchRealTimeInfo(stopId)
-                .enqueue(callback({
-                    this.handleBody(it)
-                }, {
-                    this.logError(it)
-                }))
+                .map { it.results.joinToString("\n") { it.formatBusInfo() } }
+                .subscribeOn(Schedulers.io())
+                .observeOn(AndroidSchedulers.mainThread())
+                .subscribe({
+                    message.text = it
+                }, Throwable::printStackTrace)
 
         busService.fetchStop(stopId)
-                .enqueue(callback({
+                .subscribeOn(Schedulers.io())
+                .observeOn(AndroidSchedulers.mainThread())
+                .subscribe({
                     if (it.results.isNotEmpty()) {
                         title = "$stopId ${it.results.first().fullname}"
                     }
-                }, this::logError))
-    }
-
-    private fun <T> callback(success: ((T) -> Unit), failure: ((Throwable?) -> Unit)? = null): Callback<T> {
-        return object : Callback<T> {
-            override fun onResponse(call: Call<T>?, response: Response<T>?) {
-                if (response == null || !response.isSuccessful) {
-                    failure?.invoke(null)
-                    return
-                }
-                val body = response.body()
-                when {
-                    body != null -> success(body)
-                    else -> failure?.invoke(null)
-                }
-            }
-
-            override fun onFailure(call: Call<T>?, t: Throwable?) {
-                failure?.invoke(null)
-            }
-        }
-    }
-
-    private fun logError(t: Throwable?) {
-        Log.d("lol", t.toString())
-    }
-
-    private fun handleBody(body: RealTimeResult) {
-        message.text = body.results
-                .joinToString(separator = "\n") { it.formatBusInfo() }
+                }, Throwable::printStackTrace)
     }
 
     private fun RealTimeBusInfo.formatBusInfo() = "$route to $destination | ${formatDueTime()}"

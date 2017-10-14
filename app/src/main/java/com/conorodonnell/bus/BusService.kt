@@ -1,16 +1,16 @@
 package com.conorodonnell.bus
 
-import retrofit2.Call
+import io.reactivex.Observable
 import retrofit2.http.GET
 import retrofit2.http.Query
 
 interface BusService {
     @GET("realtimebusinformation")
-    fun fetchRealTimeInfo(@Query("stopid") stopId: String): Call<RealTimeResult>
+    fun fetchRealTimeInfo(@Query("stopid") stopId: String): Observable<RealTimeResult>
 
     @GET("busstopinformation")
-    fun fetchStop(@Query("stopid") stopId: String): Call<StopResult>
+    fun fetchStop(@Query("stopid") stopId: String): Observable<StopResult>
 
     @GET("busstopinformation")
-    fun fetchAllStops(): Call<StopResult>
+    fun fetchAllStops(): Observable<StopResult>
 }
