@@ -9,7 +9,6 @@ import android.support.design.widget.BottomNavigationView
 import android.support.v4.content.ContextCompat
 import android.support.v4.content.PermissionChecker.PERMISSION_GRANTED
 import android.support.v7.app.AppCompatActivity
-import android.util.Log
 import android.view.View
 import android.view.inputmethod.EditorInfo
 import android.view.inputmethod.InputMethodManager
@@ -24,8 +23,8 @@ import com.google.android.gms.location.LocationServices
 import com.google.android.gms.maps.CameraUpdateFactory
 import com.google.android.gms.maps.GoogleMap
 import com.google.android.gms.maps.model.LatLng
-import com.google.maps.android.clustering.ClusterItem
-import com.google.maps.android.clustering.ClusterManager
+import com.google.android.gms.maps.model.LatLngBounds
+import com.google.android.gms.maps.model.MarkerOptions
 import io.reactivex.Maybe
 import io.reactivex.Observable
 import io.reactivex.Single
@@ -99,32 +98,25 @@ class MainActivity : AppCompatActivity() {
     }
 
     private fun setupMap(map: GoogleMap) {
-        val clusterManager = ClusterManager<StopMarker>(this, map)
 
-        clusterManager.setOnClusterItemInfoWindowClickListener { item ->
+        map.setOnInfoWindowClickListener { item ->
+            loadStop(item.title)
             switchUi()
-            loadStop(item.stopId)
         }
-        // Point the map's listeners at the listeners implemented by the cluster
-        // manager.
-        map.setOnCameraIdleListener(clusterManager)
-        map.setOnMarkerClickListener(clusterManager)
-        map.setOnInfoWindowClickListener(clusterManager)
 
-//        var userDidMove = false
-//        map.setOnCameraMoveStartedListener { reason ->
-//            userDidMove = reason == REASON_GESTURE
-//        }
-//        map.setOnCameraIdleListener {
-//            if (userDidMove) {
-//                loadStopsInView(map)
-//                userDidMove = false
-//            }
-//        }
+        val idleListener = {
+            addMarkersForStops(loadStopsIn(map.projection.visibleRegion.latLngBounds), map)
+        }
+        map.setOnCameraIdleListener(idleListener)
+        map.setOnMarkerClickListener {
+            map.setOnCameraIdleListener {
+                map.setOnCameraIdleListener(idleListener)
+            }
+            return@setOnMarkerClickListener false
+        }
+
         if (ContextCompat.checkSelfPermission(this, ACCESS_FINE_LOCATION) != PERMISSION_GRANTED) {
-            val latLng = LatLng(53.36, -6.25)
-            map.animateCamera(CameraUpdateFactory.newLatLngZoom(latLng, 12f))
-            loadStopsInView(latLng, clusterManager)
+            loadDefaultLocation(map)
             return
         }
         map.isMyLocationEnabled = true
@@ -134,54 +126,59 @@ class MainActivity : AppCompatActivity() {
                 .lastLocation
                 .addOnSuccessListener { location ->
                     if (location == null) {
-                        val latLng = LatLng(53.36, -6.25)
-                        map.animateCamera(CameraUpdateFactory.newLatLngZoom(latLng, 12f))
-                        loadStopsInView(latLng, clusterManager)
+                        loadDefaultLocation(map)
                         return@addOnSuccessListener
                     }
                     val latLng = LatLng(location.latitude, location.longitude)
-                    map.animateCamera(CameraUpdateFactory.newLatLngZoom(latLng, 15f))
-                    loadStopsInView(latLng, clusterManager)
+                    map.animateCamera(CameraUpdateFactory.newLatLngZoom(latLng, 15f),
+                            loadMarkers(map))
                 }
 
     }
 
-    data class StopMarker(
-            val stopPosition: LatLng,
-            val stopId: String,
-            val stopName: String
-    ) : ClusterItem {
-        override fun getPosition(): LatLng {
-            return stopPosition
-        }
-
-        override fun getSnippet(): String {
-            return stopName
-        }
-
-        override fun getTitle(): String {
-            return stopId
-        }
+    private fun loadDefaultLocation(map: GoogleMap) {
+        map.animateCamera(CameraUpdateFactory.newLatLngZoom(LatLng(53.36, -6.25), 12f),
+                loadMarkers(map))
     }
 
-    private fun loadStopsInView(position: LatLng, clusterManager: ClusterManager<StopMarker>) {
-        loadStopsIn(position)
-                .subscribe({ list: MutableList<Stop> ->
-                    addMarkersForStops(list, clusterManager)
-                }, Throwable::printStackTrace)
-    }
-
-
-    private fun addMarkersForStops(stops: MutableList<Stop>, clusterManager: ClusterManager<StopMarker>) {
-        clusterManager.clearItems()
-        try {
-            for (stop in stops) {
-                val latLng = LatLng(stop.latitude, stop.longitude)
-                clusterManager.addItem(StopMarker(latLng, stop.id, stop.name))
+    private fun loadMarkers(map: GoogleMap): GoogleMap.CancelableCallback {
+        return object : GoogleMap.CancelableCallback {
+            override fun onFinish() {
+                addMarkersForStops(loadStopsIn(map.projection.visibleRegion.latLngBounds), map)
             }
-        } catch (e: Exception) {
-            e.printStackTrace()
+
+            override fun onCancel() {
+                addMarkersForStops(loadStopsIn(map.projection.visibleRegion.latLngBounds), map)
+            }
         }
+    }
+
+    private fun addMarkersForStops(stops: Single<MutableList<Stop>>, map: GoogleMap) {
+        stops.subscribe({ list: MutableList<Stop> ->
+            if (list.size > 300) {
+                mapView.post {
+                    map.clear()
+                    toast("Too many stops, zoom in")
+                }
+            } else {
+                val markers = list.map { stop ->
+                    val latLng = LatLng(stop.latitude, stop.longitude)
+                    MarkerOptions()
+                            .position(latLng)
+                            .title(stop.id)
+                            .snippet(stop.name)
+                }
+                mapView.post {
+                    toast("Refreshing")
+                    map.clear()
+                    markers.forEach { map.addMarker(it) }
+                }
+            }
+        }, Throwable::printStackTrace)
+    }
+
+    private fun toast(message: String) {
+        Toast.makeText(this@MainActivity, message, LENGTH_SHORT).show()
     }
 
     private fun switchUi() {
@@ -214,48 +211,17 @@ class MainActivity : AppCompatActivity() {
         if (grantResults.isEmpty()) {
             return
         }
-        if (grantResults.first() == PERMISSION_GRANTED) {
-            loadNearest { list ->
-                loadStop(list.first().id)
-            }
-        }
     }
 
-    private fun loadNearest(callback: (MutableList<Stop>) -> Unit) {
-        if (ContextCompat.checkSelfPermission(this, ACCESS_FINE_LOCATION) != PERMISSION_GRANTED) {
-            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
-                requestPermissions(arrayOf(ACCESS_FINE_LOCATION), 17)
-            }
-            return
-        }
-        LocationServices.getFusedLocationProviderClient(this)
-                .lastLocation
-                .addOnSuccessListener { location ->
-                    Log.d("Conor", "Location: $location")
-                    if (location == null) {
-                        return@addOnSuccessListener
-                    }
-                    loadNearestStops(location.latitude, location.longitude, callback)
-                }
-    }
-
-    private fun loadNearestStops(latitude: Double, longitude: Double, callback: (MutableList<Stop>) -> Unit) {
-        database.stops()
-                .findNearest(latitude, longitude)
-                .filter { it.isNotEmpty() }
-                .subscribeOn(Schedulers.io())
-                .observeOn(AndroidSchedulers.mainThread())
-                .subscribe(callback, Throwable::printStackTrace)
-    }
-
-    private fun loadStopsIn(position: LatLng): Maybe<MutableList<Stop>> {
+    private fun loadStopsIn(area: LatLngBounds): Single<MutableList<Stop>> {
+        val ne = area.northeast
+        val sw = area.southwest
         return database.stops()
-                .findNearest(position.latitude, position.longitude)
-                .filter { it.isNotEmpty() }
+                .findInArea(ne.latitude, sw.latitude, sw.longitude, ne.longitude)
                 .subscribeOn(Schedulers.io())
     }
 
-    fun hideKeyboard() {
+    private fun hideKeyboard() {
         val v = window.currentFocus
         if (v != null) {
             val imm = getSystemService(Context.INPUT_METHOD_SERVICE) as InputMethodManager

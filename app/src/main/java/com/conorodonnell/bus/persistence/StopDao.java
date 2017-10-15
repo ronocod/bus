@@ -4,7 +4,6 @@ import android.arch.persistence.room.Dao;
 import android.arch.persistence.room.Insert;
 import android.arch.persistence.room.OnConflictStrategy;
 import android.arch.persistence.room.Query;
-import android.arch.persistence.room.RoomWarnings;
 
 import java.util.List;
 
@@ -20,14 +19,9 @@ public interface StopDao {
     Single<Stop> findById(String id);
 
     @Query("SELECT * FROM Stop " +
-            "WHERE (latitude BETWEEN MIN(:top, :bottom) AND MAX(:top, :bottom)) " +
-            "AND (longitude BETWEEN MIN(:left, :right) AND MAX(:left, :right))")
-    Single<List<Stop>> findInArea(double top, double bottom, double left, double right);
-
-    @SuppressWarnings(RoomWarnings.CURSOR_MISMATCH)
-    @Query("SELECT *, (ABS(latitude - :latitude) +  ABS(longitude - :longitude)) as distance FROM Stop " +
-            "ORDER BY distance ASC LIMIT 200")
-    Single<List<Stop>> findNearest(double latitude, double longitude);
+            "WHERE (latitude BETWEEN :south AND :north) " +
+            "AND (longitude BETWEEN :west AND :east)")
+    Single<List<Stop>> findInArea(double north, double south, double west, double east);
 
     @Query("SELECT * FROM Stop ")
     Single<List<Stop>> findAll();
