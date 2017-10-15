@@ -8,19 +8,24 @@
     android:layout_height="match_parent"
     tools:context="com.conorodonnell.bus.MainActivity">
 
-    <TextView
-        android:id="@+id/busInfoText"
+    <android.support.v4.widget.SwipeRefreshLayout
+        android:id="@+id/swipeRefreshLayout"
         android:layout_width="0dp"
         android:layout_height="0dp"
-        android:layout_marginLeft="@dimen/activity_horizontal_margin"
-        android:layout_marginStart="@dimen/activity_horizontal_margin"
-        android:layout_marginTop="@dimen/activity_vertical_margin"
-        android:gravity="top"
-        app:layout_constraintBottom_toTopOf="@id/stopField"
+        app:layout_constraintBottom_toTopOf="@id/navigation"
         app:layout_constraintLeft_toLeftOf="parent"
         app:layout_constraintRight_toRightOf="parent"
-        app:layout_constraintTop_toTopOf="parent"
-        tools:text="14 to Dundrum"/>
+        app:layout_constraintTop_toTopOf="parent">
+        <TextView
+            android:id="@+id/busInfoText"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:paddingLeft="@dimen/activity_horizontal_margin"
+            android:paddingStart="@dimen/activity_horizontal_margin"
+            android:paddingTop="@dimen/activity_vertical_margin"
+            android:gravity="top"
+            tools:text="14 to Dundrum"/>
+    </android.support.v4.widget.SwipeRefreshLayout>
 
     <com.google.android.gms.maps.MapView
         android:id="@+id/mapView"
@@ -28,7 +33,7 @@
         android:layout_height="0dp"
         android:background="@android:color/holo_green_light"
         android:visibility="gone"
-        app:layout_constraintBottom_toTopOf="@id/stopField"
+        app:layout_constraintBottom_toTopOf="@id/navigation"
         app:layout_constraintLeft_toLeftOf="parent"
         app:layout_constraintRight_toRightOf="parent"
         app:layout_constraintTop_toTopOf="parent"/>
@@ -40,46 +45,9 @@
         android:layout_marginEnd="0dp"
         android:layout_marginStart="0dp"
         android:background="?android:attr/windowBackground"
-        android:visibility="gone"
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintLeft_toLeftOf="parent"
         app:layout_constraintRight_toRightOf="parent"
         app:menu="@menu/navigation"/>
-
-    <EditText
-        android:id="@+id/stopField"
-        android:layout_width="0dp"
-        android:layout_height="wrap_content"
-        android:layout_marginLeft="8dp"
-        android:layout_marginRight="8dp"
-        android:focusedByDefault="false"
-        android:hint="Enter stop ID"
-        android:imeOptions="actionDone"
-        android:inputType="number"
-        app:layout_constraintBottom_toTopOf="@id/navigation"
-        app:layout_constraintLeft_toLeftOf="parent"
-        app:layout_constraintRight_toLeftOf="@id/fetchButton"/>
-
-    <Button
-        android:id="@+id/fetchButton"
-        style="@style/Widget.AppCompat.Button.Borderless"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:text="Fetch"
-        android:textColor="@android:color/holo_blue_dark"
-        app:layout_constraintBottom_toTopOf="@id/navigation"
-        app:layout_constraintLeft_toRightOf="@id/stopField"
-        app:layout_constraintRight_toLeftOf="@id/locationButton"/>
-
-    <Button
-        android:id="@+id/locationButton"
-        style="@style/Widget.AppCompat.Button.Borderless"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:text="Map"
-        android:textColor="@android:color/holo_blue_dark"
-        app:layout_constraintBottom_toTopOf="@id/navigation"
-        app:layout_constraintLeft_toRightOf="@id/fetchButton"
-        app:layout_constraintRight_toRightOf="parent"/>
 
 </android.support.constraint.ConstraintLayout>

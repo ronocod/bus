@@ -9,8 +9,9 @@ import retrofit2.converter.moshi.MoshiConverterFactory
 
 object Core {
 
-    fun service(): BusService {
 
+
+    fun service(): BusService {
         val interceptor = HttpLoggingInterceptor()
         interceptor.level = HttpLoggingInterceptor.Level.BASIC
         val client = OkHttpClient.Builder().addInterceptor(interceptor).build()

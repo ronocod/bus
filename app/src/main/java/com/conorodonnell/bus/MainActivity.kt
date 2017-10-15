@@ -2,16 +2,15 @@ package com.conorodonnell.bus
 
 import android.Manifest.permission.ACCESS_FINE_LOCATION
 import android.arch.persistence.room.Room
-import android.content.Context
 import android.os.Build
 import android.os.Bundle
 import android.support.design.widget.BottomNavigationView
 import android.support.v4.content.ContextCompat
 import android.support.v4.content.PermissionChecker.PERMISSION_GRANTED
 import android.support.v7.app.AppCompatActivity
+import android.view.Menu
 import android.view.View
-import android.view.inputmethod.EditorInfo
-import android.view.inputmethod.InputMethodManager
+import android.widget.SearchView
 import android.widget.Toast
 import android.widget.Toast.LENGTH_SHORT
 import com.conorodonnell.bus.api.Core
@@ -22,6 +21,7 @@ import com.conorodonnell.bus.persistence.Stop
 import com.google.android.gms.location.LocationServices
 import com.google.android.gms.maps.CameraUpdateFactory
 import com.google.android.gms.maps.GoogleMap
+import com.google.android.gms.maps.model.BitmapDescriptorFactory
 import com.google.android.gms.maps.model.LatLng
 import com.google.android.gms.maps.model.LatLngBounds
 import com.google.android.gms.maps.model.MarkerOptions
@@ -43,24 +43,26 @@ class MainActivity : AppCompatActivity() {
 
     private val navigationItemSelectedListener = BottomNavigationView.OnNavigationItemSelectedListener { item ->
         when (item.itemId) {
-            R.id.navigation_home -> {
-                busInfoText.setText(R.string.title_home)
+            R.id.navigation_results -> {
+                busInfoText.visibility = View.VISIBLE
+                mapView.visibility = View.GONE
                 return@OnNavigationItemSelectedListener true
             }
-            R.id.navigation_dashboard -> {
-                busInfoText.setText(R.string.title_dashboard)
-                return@OnNavigationItemSelectedListener true
-            }
-            R.id.navigation_notifications -> {
-                busInfoText.setText(R.string.title_notifications)
+            R.id.navigation_map -> {
+                busInfoText.visibility = View.GONE
+                mapView.visibility = View.VISIBLE
+                if (ContextCompat.checkSelfPermission(this, ACCESS_FINE_LOCATION) != PERMISSION_GRANTED
+                        && Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
+                    requestPermissions(arrayOf(ACCESS_FINE_LOCATION), 17)
+                }
+                title = "Map"
                 return@OnNavigationItemSelectedListener true
             }
         }
         false
     }
 
-    private var database: AppDatabase = Room.databaseBuilder(this, AppDatabase::class.java, "bus")
-            .build()
+    private var database: AppDatabase = Room.databaseBuilder(this, AppDatabase::class.java, "bus").build()
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -78,30 +80,38 @@ class MainActivity : AppCompatActivity() {
                 }
 
         navigation.setOnNavigationItemSelectedListener(navigationItemSelectedListener)
-        stopField.setOnEditorActionListener { _, actionId, _ ->
-            if (actionId == EditorInfo.IME_ACTION_DONE) {
-                loadStop(stopField.text.toString())
-                true
-            } else false
-        }
-
-        fetchButton.setOnClickListener {
-            loadStop(stopField.text.toString())
-        }
-        locationButton.setOnClickListener {
-            switchUi()
-        }
         mapView.onCreate(savedInstanceState)
         mapView.getMapAsync { map ->
             setupMap(map)
         }
+
+    }
+
+    override fun onCreateOptionsMenu(menu: Menu?): Boolean {
+        if (menu == null) {
+            return super.onCreateOptionsMenu(menu)
+        }
+        menuInflater.inflate(R.menu.main, menu)
+
+        val searchView = menu.findItem(R.id.menu_search).actionView as SearchView
+        searchView.setOnQueryTextListener(object : SearchView.OnQueryTextListener {
+            override fun onQueryTextSubmit(query: String?): Boolean {
+                query?.let { loadStop(it) }
+                return false
+            }
+
+            override fun onQueryTextChange(newText: String?): Boolean {
+                return true
+            }
+        })
+
+        return super.onCreateOptionsMenu(menu)
     }
 
     private fun setupMap(map: GoogleMap) {
 
         map.setOnInfoWindowClickListener { item ->
             loadStop(item.title)
-            switchUi()
         }
 
         val idleListener = {
@@ -169,7 +179,6 @@ class MainActivity : AppCompatActivity() {
                             .snippet(stop.name)
                 }
                 mapView.post {
-                    toast("Refreshing")
                     map.clear()
                     markers.forEach { map.addMarker(it) }
                 }
@@ -181,20 +190,6 @@ class MainActivity : AppCompatActivity() {
         Toast.makeText(this@MainActivity, message, LENGTH_SHORT).show()
     }
 
-    private fun switchUi() {
-        if (ContextCompat.checkSelfPermission(this, ACCESS_FINE_LOCATION) != PERMISSION_GRANTED
-                && Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
-            requestPermissions(arrayOf(ACCESS_FINE_LOCATION), 17)
-        }
-        if (mapView.visibility == View.GONE) {
-            busInfoText.visibility = View.GONE
-            mapView.visibility = View.VISIBLE
-        } else {
-            busInfoText.visibility = View.VISIBLE
-            mapView.visibility = View.GONE
-        }
-    }
-
     override fun onResume() {
         super.onResume()
         mapView.onResume()
@@ -203,6 +198,11 @@ class MainActivity : AppCompatActivity() {
     override fun onPause() {
         super.onPause()
         mapView.onPause()
+    }
+
+    override fun onDestroy() {
+        super.onDestroy()
+        disposable.clear()
     }
 
     override fun onRequestPermissionsResult(requestCode: Int, permissions: Array<out String>, grantResults: IntArray) {
@@ -221,21 +221,7 @@ class MainActivity : AppCompatActivity() {
                 .subscribeOn(Schedulers.io())
     }
 
-    private fun hideKeyboard() {
-        val v = window.currentFocus
-        if (v != null) {
-            val imm = getSystemService(Context.INPUT_METHOD_SERVICE) as InputMethodManager
-            imm.hideSoftInputFromWindow(v.windowToken, 0)
-        }
-    }
-
-    override fun onDestroy() {
-        super.onDestroy()
-        disposable.clear()
-    }
-
     private fun loadStop(stopId: String) {
-        fetchButton.isEnabled = false
         database.stops().findById(stopId)
                 .subscribeOn(Schedulers.io())
                 .observeOn(AndroidSchedulers.mainThread())
@@ -243,11 +229,9 @@ class MainActivity : AppCompatActivity() {
                     subscribe({
                         title = "$stopId ${it.name}"
                         updateBusData(stopId)
-                        hideKeyboard()
                     }, {
                         Toast.makeText(this@MainActivity, "Stop $stopId doesn't exist", LENGTH_SHORT).show()
                         it.printStackTrace()
-                        fetchButton.isEnabled = true
                     })
                 }
     }
@@ -261,9 +245,7 @@ class MainActivity : AppCompatActivity() {
                 .safely {
                     subscribe({
                         busInfoText.text = it
-                        fetchButton.isEnabled = true
                     }, {
-                        fetchButton.isEnabled = true
                         it.printStackTrace()
                     })
                 }
