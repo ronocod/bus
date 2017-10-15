@@ -109,6 +109,7 @@ class MainActivity : AppCompatActivity() {
         // manager.
         map.setOnCameraIdleListener(clusterManager)
         map.setOnMarkerClickListener(clusterManager)
+        map.setOnInfoWindowClickListener(clusterManager)
 
 //        var userDidMove = false
 //        map.setOnCameraMoveStartedListener { reason ->
@@ -132,6 +133,12 @@ class MainActivity : AppCompatActivity() {
         LocationServices.getFusedLocationProviderClient(this)
                 .lastLocation
                 .addOnSuccessListener { location ->
+                    if (location == null) {
+                        val latLng = LatLng(53.36, -6.25)
+                        map.animateCamera(CameraUpdateFactory.newLatLngZoom(latLng, 12f))
+                        loadStopsInView(latLng, clusterManager)
+                        return@addOnSuccessListener
+                    }
                     val latLng = LatLng(location.latitude, location.longitude)
                     map.animateCamera(CameraUpdateFactory.newLatLngZoom(latLng, 15f))
                     loadStopsInView(latLng, clusterManager)
