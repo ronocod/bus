@@ -115,8 +115,7 @@ class MainActivity : AppCompatActivity() {
 
         map.setOnInfoWindowClickListener { item ->
             loadStop(item.title)
-            busInfoText.visibility = View.VISIBLE
-            mapView.visibility = View.GONE
+            navigation.selectedItemId = R.id.navigation_results
         }
 
         val idleListener = {
