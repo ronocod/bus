@@ -8,6 +8,7 @@ import android.support.design.widget.BottomNavigationView
 import android.support.v4.content.ContextCompat
 import android.support.v4.content.PermissionChecker.PERMISSION_GRANTED
 import android.support.v7.app.AppCompatActivity
+import android.text.InputType
 import android.view.Menu
 import android.view.View
 import android.widget.SearchView
@@ -21,7 +22,6 @@ import com.conorodonnell.bus.persistence.Stop
 import com.google.android.gms.location.LocationServices
 import com.google.android.gms.maps.CameraUpdateFactory
 import com.google.android.gms.maps.GoogleMap
-import com.google.android.gms.maps.model.BitmapDescriptorFactory
 import com.google.android.gms.maps.model.LatLng
 import com.google.android.gms.maps.model.LatLngBounds
 import com.google.android.gms.maps.model.MarkerOptions
@@ -93,10 +93,12 @@ class MainActivity : AppCompatActivity() {
         }
         menuInflater.inflate(R.menu.main, menu)
 
-        val searchView = menu.findItem(R.id.menu_search).actionView as SearchView
+        val searchItem = menu.findItem(R.id.menu_search)
+        val searchView = searchItem.actionView as SearchView
         searchView.setOnQueryTextListener(object : SearchView.OnQueryTextListener {
             override fun onQueryTextSubmit(query: String?): Boolean {
                 query?.let { loadStop(it) }
+                searchItem.collapseActionView()
                 return false
             }
 
@@ -104,6 +106,7 @@ class MainActivity : AppCompatActivity() {
                 return true
             }
         })
+        searchView.inputType = InputType.TYPE_CLASS_NUMBER
 
         return super.onCreateOptionsMenu(menu)
     }
@@ -112,6 +115,8 @@ class MainActivity : AppCompatActivity() {
 
         map.setOnInfoWindowClickListener { item ->
             loadStop(item.title)
+            busInfoText.visibility = View.VISIBLE
+            mapView.visibility = View.GONE
         }
 
         val idleListener = {
