@@ -3,20 +3,16 @@ package com.conorodonnell.bus
 import android.Manifest.permission.ACCESS_FINE_LOCATION
 import android.app.Activity
 import android.arch.persistence.room.Room
-import android.os.Build
 import android.os.Bundle
-import android.support.design.widget.BottomNavigationView
 import android.support.v4.content.ContextCompat
 import android.support.v4.content.PermissionChecker.PERMISSION_GRANTED
 import android.support.v7.app.AppCompatActivity
 import android.text.InputType
 import android.view.Menu
-import android.view.View
 import android.widget.SearchView
 import android.widget.Toast
 import android.widget.Toast.LENGTH_SHORT
 import com.conorodonnell.bus.api.Core
-import com.conorodonnell.bus.api.RealTimeBusInfo
 import com.conorodonnell.bus.api.StopInfo
 import com.conorodonnell.bus.persistence.AppDatabase
 import com.conorodonnell.bus.persistence.Stop
@@ -33,54 +29,30 @@ import io.reactivex.android.schedulers.AndroidSchedulers
 import io.reactivex.disposables.CompositeDisposable
 import io.reactivex.disposables.Disposable
 import io.reactivex.schedulers.Schedulers
-import kotlinx.android.synthetic.main.activity_main.*
+import kotlinx.android.synthetic.main.activity_map.*
 import java.lang.Double.parseDouble
 
 
-class MainActivity : AppCompatActivity() {
+class MapActivity : AppCompatActivity() {
 
     private val busService = Core.service()
     private val disposable = CompositeDisposable()
-
-    private val navigationItemSelectedListener = BottomNavigationView.OnNavigationItemSelectedListener { item ->
-        when (item.itemId) {
-            R.id.navigation_results -> {
-                busInfoText.visibility = View.VISIBLE
-                mapView.visibility = View.GONE
-                return@OnNavigationItemSelectedListener true
-            }
-            R.id.navigation_map -> {
-                busInfoText.visibility = View.GONE
-                mapView.visibility = View.VISIBLE
-                if (ContextCompat.checkSelfPermission(this, ACCESS_FINE_LOCATION) != PERMISSION_GRANTED
-                        && Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
-                    requestPermissions(arrayOf(ACCESS_FINE_LOCATION), 17)
-                }
-                title = "Map"
-                return@OnNavigationItemSelectedListener true
-            }
-        }
-        false
-    }
-
     private var database: AppDatabase = Room.databaseBuilder(this, AppDatabase::class.java, "bus").build()
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        setContentView(R.layout.activity_main)
+        setContentView(R.layout.activity_map)
 
         database.stops().count()
                 .filter { it == 0 }
+                .flatMapObservable { busService.fetchAllBusStops() }
                 .subscribeOn(Schedulers.io())
                 .safely {
                     subscribe {
-                        busService.fetchAllBusStops()
-                                .subscribeOn(Schedulers.io())
-                                .forEach { database.stops().insertAll(it.results.map { it.toEntity() }) }
+                        database.stops().insertAll(it.results.map { it.toEntity() })
                     }
                 }
 
-        navigation.setOnNavigationItemSelectedListener(navigationItemSelectedListener)
         mapView.onCreate(savedInstanceState)
         mapView.getMapAsync(this::setupMap)
     }
@@ -113,7 +85,6 @@ class MainActivity : AppCompatActivity() {
 
         map.setOnInfoWindowClickListener { item ->
             loadStop(item.title)
-            navigation.selectedItemId = R.id.navigation_results
         }
 
         val idleListener = {
@@ -230,30 +201,13 @@ class MainActivity : AppCompatActivity() {
                 .safely {
                     subscribe({
                         title = "$stopId ${it.name}"
-                        updateBusData(stopId)
+                        startActivity(StopActivity.createIntent(this@MapActivity, stopId))
                     }, {
-                        Toast.makeText(this@MainActivity, "Stop $stopId doesn't exist", LENGTH_SHORT).show()
+                        Toast.makeText(this@MapActivity, "Stop $stopId doesn't exist", LENGTH_SHORT).show()
                         it.printStackTrace()
                     })
                 }
     }
-
-    private fun updateBusData(stopId: String) {
-        busInfoText.text = "Loading..."
-        busService.fetchRealTimeInfo(stopId)
-                .map { it.results.joinToString("\n") { it.formatBusInfo() } }
-                .subscribeOn(Schedulers.io())
-                .observeOn(AndroidSchedulers.mainThread())
-                .safely {
-                    subscribe({
-                        busInfoText.text = it
-                    }, {
-                        it.printStackTrace()
-                    })
-                }
-    }
-
-    private fun RealTimeBusInfo.formatBusInfo() = "$route to $destination | ${formatDueTime()}"
 
     private fun StopInfo.toEntity(): Stop = Stop(stopid, fullname, parseDouble(latitude), parseDouble(longitude))
 
@@ -265,11 +219,5 @@ class MainActivity : AppCompatActivity() {
 
     private inline fun <T> Maybe<T>.safely(subscription: Maybe<T>.() -> Disposable) =
             disposable.add(subscription())
-
-    private fun RealTimeBusInfo.formatDueTime() =
-            when (duetime) {
-                "Due" -> duetime
-                else -> "$duetime mins"
-            }
 
 }
