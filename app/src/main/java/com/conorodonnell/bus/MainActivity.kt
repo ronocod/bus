@@ -1,6 +1,7 @@
 package com.conorodonnell.bus
 
 import android.Manifest.permission.ACCESS_FINE_LOCATION
+import android.app.Activity
 import android.arch.persistence.room.Room
 import android.os.Build
 import android.os.Bundle
@@ -81,10 +82,7 @@ class MainActivity : AppCompatActivity() {
 
         navigation.setOnNavigationItemSelectedListener(navigationItemSelectedListener)
         mapView.onCreate(savedInstanceState)
-        mapView.getMapAsync { map ->
-            setupMap(map)
-        }
-
+        mapView.getMapAsync(this::setupMap)
     }
 
     override fun onCreateOptionsMenu(menu: Menu?): Boolean {
@@ -172,7 +170,7 @@ class MainActivity : AppCompatActivity() {
             if (list.size > 300) {
                 mapView.post {
                     map.clear()
-                    toast("Too many stops, zoom in")
+                    shortToast("Too many stops, zoom in")
                 }
             } else {
                 val markers = list.map { stop ->
@@ -190,8 +188,8 @@ class MainActivity : AppCompatActivity() {
         }, Throwable::printStackTrace)
     }
 
-    private fun toast(message: String) {
-        Toast.makeText(this@MainActivity, message, LENGTH_SHORT).show()
+    private fun Activity.shortToast(message: String) {
+        Toast.makeText(this, message, LENGTH_SHORT).show()
     }
 
     override fun onResume() {
@@ -255,18 +253,17 @@ class MainActivity : AppCompatActivity() {
                 }
     }
 
-
     private fun RealTimeBusInfo.formatBusInfo() = "$route to $destination | ${formatDueTime()}"
 
     private fun StopInfo.toEntity(): Stop = Stop(stopid, fullname, parseDouble(latitude), parseDouble(longitude))
 
-    private fun <T> Observable<T>.safely(subscription: Observable<T>.() -> Disposable) =
+    private inline fun <T> Observable<T>.safely(subscription: Observable<T>.() -> Disposable) =
             disposable.add(subscription())
 
-    private fun <T> Single<T>.safely(subscription: Single<T>.() -> Disposable) =
+    private inline fun <T> Single<T>.safely(subscription: Single<T>.() -> Disposable) =
             disposable.add(subscription())
 
-    private fun <T> Maybe<T>.safely(subscription: Maybe<T>.() -> Disposable) =
+    private inline fun <T> Maybe<T>.safely(subscription: Maybe<T>.() -> Disposable) =
             disposable.add(subscription())
 
     private fun RealTimeBusInfo.formatDueTime() =
