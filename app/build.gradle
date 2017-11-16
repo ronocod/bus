@@ -1,21 +1,25 @@
 apply plugin: 'com.android.application'
 
 apply plugin: 'kotlin-android'
-
 apply plugin: 'kotlin-android-extensions'
 apply plugin: 'kotlin-kapt'
 
+Properties properties = new Properties()
+properties.load(project.rootProject.file('user.properties').newDataInputStream())
+def googleMapsApiKey = properties.getProperty('googleMapsApiKey')
+
 android {
-    compileSdkVersion 26
-    buildToolsVersion "26.0.2"
+    compileSdkVersion 27
+    buildToolsVersion "27.0.0"
     defaultConfig {
         applicationId "com.conorodonnell.bus"
         minSdkVersion 19
-        targetSdkVersion 26
+        targetSdkVersion 27
         versionCode 1
         versionName "1.0"
         testInstrumentationRunner "android.support.test.runner.AndroidJUnitRunner"
         vectorDrawables.useSupportLibrary = true
+        manifestPlaceholders = [mapsApiKey:"$googleMapsApiKey"]
     }
     buildTypes {
         release {
@@ -25,9 +29,9 @@ android {
     }
 }
 
-def roomVersion = "1.0.0-rc1"
-def playServicesVersion = '11.4.2'
-def supportLibraryVersion = '26.1.0'
+def roomVersion = "1.0.0"
+def playServicesVersion = '11.6.0'
+def supportLibraryVersion = '27.0.1'
 
 dependencies {
     implementation fileTree(dir: 'libs', include: ['*.jar'])

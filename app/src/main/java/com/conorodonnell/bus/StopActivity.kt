@@ -35,7 +35,6 @@ class StopActivity : AppCompatActivity() {
     private val busService = Core.service()
     private val disposable = CompositeDisposable()
 
-
     private var database: AppDatabase = Room.databaseBuilder(this, AppDatabase::class.java, "bus").build()
 
     override fun onCreate(savedInstanceState: Bundle?) {
