@@ -17,6 +17,9 @@ jobs:
     
     steps:
       - checkout
+      - run:
+          name: Setup environment
+          command: echo 'googleMapsApiKey=$GOOGLE_MAPS_API_KEY' > user.properties
       - restore_cache:
           key: jars-{{ checksum "build.gradle" }}-{{ checksum  "app/build.gradle" }}
       - run:
@@ -26,9 +29,6 @@ jobs:
           paths:
             - ~/.gradle
           key: jars-{{ checksum "build.gradle" }}-{{ checksum  "app/build.gradle" }}
-      - run:
-          name: Setup environment
-          command: echo 'googleMapsApiKey=$GOOGLE_MAPS_API_KEY' > user.properties
       - run:
           name: Run Tests
           command: ./gradlew lint test
