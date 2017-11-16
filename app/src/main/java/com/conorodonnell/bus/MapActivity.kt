@@ -200,7 +200,6 @@ class MapActivity : AppCompatActivity() {
                 .observeOn(AndroidSchedulers.mainThread())
                 .safely {
                     subscribe({
-                        title = "$stopId ${it.name}"
                         startActivity(StopActivity.createIntent(this@MapActivity, stopId))
                     }, {
                         Toast.makeText(this@MapActivity, "Stop $stopId doesn't exist", LENGTH_SHORT).show()

@@ -5,9 +5,6 @@ import android.content.Context
 import android.content.Intent
 import android.os.Bundle
 import android.support.v7.app.AppCompatActivity
-import android.text.InputType
-import android.view.Menu
-import android.widget.SearchView
 import android.widget.Toast
 import com.conorodonnell.bus.api.Core
 import com.conorodonnell.bus.api.RealTimeBusInfo
@@ -42,30 +39,6 @@ class StopActivity : AppCompatActivity() {
         setContentView(R.layout.activity_stop)
 
         loadStop(intent.getStringExtra(EXTRA_STOP_ID))
-    }
-
-    override fun onCreateOptionsMenu(menu: Menu?): Boolean {
-        if (menu == null) {
-            return super.onCreateOptionsMenu(menu)
-        }
-        menuInflater.inflate(R.menu.main, menu)
-
-        val searchItem = menu.findItem(R.id.menu_search)
-        val searchView = searchItem.actionView as SearchView
-        searchView.setOnQueryTextListener(object : SearchView.OnQueryTextListener {
-            override fun onQueryTextSubmit(query: String?): Boolean {
-                query?.let { loadStop(it) }
-                searchItem.collapseActionView()
-                return false
-            }
-
-            override fun onQueryTextChange(newText: String?): Boolean {
-                return true
-            }
-        })
-        searchView.inputType = InputType.TYPE_CLASS_NUMBER
-
-        return super.onCreateOptionsMenu(menu)
     }
 
     override fun onDestroy() {
