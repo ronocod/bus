@@ -3,6 +3,8 @@ package com.conorodonnell.bus
 import android.Manifest.permission.ACCESS_FINE_LOCATION
 import android.app.Activity
 import android.arch.persistence.room.Room
+import android.content.Context
+import android.os.Build
 import android.os.Bundle
 import android.support.v4.content.ContextCompat
 import android.support.v4.content.PermissionChecker.PERMISSION_GRANTED
@@ -32,9 +34,11 @@ import io.reactivex.schedulers.Schedulers
 import kotlinx.android.synthetic.main.activity_map.*
 import java.lang.Double.parseDouble
 
+private const val PREFS = "prefs"
+private const val REQUESTED_LOCATION_PERMISSION = "requested_location_permission"
+
 
 class MapActivity : AppCompatActivity() {
-
     private val busService = Core.service()
     private val disposable = CompositeDisposable()
     private var database: AppDatabase = Room.databaseBuilder(this, AppDatabase::class.java, "bus").build()
@@ -53,9 +57,23 @@ class MapActivity : AppCompatActivity() {
                     }
                 }
 
+        if (ContextCompat.checkSelfPermission(this, ACCESS_FINE_LOCATION) != PERMISSION_GRANTED
+                && Build.VERSION.SDK_INT >= Build.VERSION_CODES.M
+                && !hasRequestedPermission()) {
+            requestPermissions(arrayOf(ACCESS_FINE_LOCATION), 17)
+            preferences()
+                    .edit()
+                    .putBoolean(REQUESTED_LOCATION_PERMISSION, true)
+                    .apply()
+        }
+
         mapView.onCreate(savedInstanceState)
         mapView.getMapAsync(this::setupMap)
     }
+
+    private fun preferences() = getSharedPreferences(PREFS, Context.MODE_PRIVATE)
+
+    private fun hasRequestedPermission() = preferences().getBoolean(REQUESTED_LOCATION_PERMISSION, false)
 
     override fun onCreateOptionsMenu(menu: Menu?): Boolean {
         if (menu == null) {
@@ -72,9 +90,7 @@ class MapActivity : AppCompatActivity() {
                 return false
             }
 
-            override fun onQueryTextChange(newText: String?): Boolean {
-                return true
-            }
+            override fun onQueryTextChange(newText: String?): Boolean = true
         })
         searchView.inputType = InputType.TYPE_CLASS_NUMBER
 
@@ -183,6 +199,9 @@ class MapActivity : AppCompatActivity() {
 
         if (grantResults.isEmpty()) {
             return
+        }
+        if (grantResults.first() == PERMISSION_GRANTED) {
+            recreate()
         }
     }
 
