@@ -154,7 +154,7 @@ class MapActivity : AppCompatActivity() {
 
     private fun addMarkersForStops(stops: Single<MutableList<Stop>>, map: GoogleMap) {
         stops.subscribe({ list: MutableList<Stop> ->
-            if (list.size > 300) {
+            if (list.size > 160) {
                 mapView.post {
                     map.clear()
                     shortToast("Too many stops, zoom in")
