@@ -57,6 +57,9 @@ class MapActivity : AppCompatActivity() {
                     }
                 }
 
+        mapView.onCreate(savedInstanceState)
+        mapView.getMapAsync(this::setupMap)
+
         if (ContextCompat.checkSelfPermission(this, ACCESS_FINE_LOCATION) != PERMISSION_GRANTED
                 && Build.VERSION.SDK_INT >= Build.VERSION_CODES.M
                 && !hasRequestedPermission()) {
@@ -66,9 +69,6 @@ class MapActivity : AppCompatActivity() {
                     .putBoolean(REQUESTED_LOCATION_PERMISSION, true)
                     .apply()
         }
-
-        mapView.onCreate(savedInstanceState)
-        mapView.getMapAsync(this::setupMap)
     }
 
     private fun preferences() = getSharedPreferences(PREFS, Context.MODE_PRIVATE)
@@ -114,8 +114,8 @@ class MapActivity : AppCompatActivity() {
             return@setOnMarkerClickListener false
         }
 
+        loadDefaultLocation(map)
         if (ContextCompat.checkSelfPermission(this, ACCESS_FINE_LOCATION) != PERMISSION_GRANTED) {
-            loadDefaultLocation(map)
             return
         }
         map.isMyLocationEnabled = true
@@ -129,15 +129,15 @@ class MapActivity : AppCompatActivity() {
                         return@addOnSuccessListener
                     }
                     val latLng = LatLng(location.latitude, location.longitude)
-                    map.animateCamera(CameraUpdateFactory.newLatLngZoom(latLng, 15f),
+                    map.animateCamera(CameraUpdateFactory.newLatLngZoom(latLng, 16f),
                             loadMarkers(map))
                 }
 
     }
 
     private fun loadDefaultLocation(map: GoogleMap) {
-        map.animateCamera(CameraUpdateFactory.newLatLngZoom(LatLng(53.36, -6.25), 12f),
-                loadMarkers(map))
+        map.moveCamera(CameraUpdateFactory.newLatLngZoom(LatLng(53.36, -6.245), 12f))
+        loadMarkers(map)
     }
 
     private fun loadMarkers(map: GoogleMap): GoogleMap.CancelableCallback {
@@ -179,6 +179,11 @@ class MapActivity : AppCompatActivity() {
         Toast.makeText(this, message, LENGTH_SHORT).show()
     }
 
+    override fun onStart() {
+        super.onStart()
+        mapView.onStart()
+    }
+
     override fun onResume() {
         super.onResume()
         mapView.onResume()
@@ -187,6 +192,11 @@ class MapActivity : AppCompatActivity() {
     override fun onPause() {
         super.onPause()
         mapView.onPause()
+    }
+
+    override fun onStop() {
+        super.onStop()
+        mapView.onStop()
     }
 
     override fun onDestroy() {
