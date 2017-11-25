@@ -38,23 +38,30 @@ class StopActivity : AppCompatActivity() {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_stop)
 
-        loadStop(intent.getStringExtra(EXTRA_STOP_ID))
+        loadStopData()
+
+        swipeRefreshLayout.setOnRefreshListener(this::loadStopData)
     }
+
+    private fun getStopIdFromIntent() = intent.getStringExtra(EXTRA_STOP_ID)
 
     override fun onDestroy() {
         super.onDestroy()
         disposable.clear()
     }
 
-    private fun loadStop(stopId: String) {
+    private fun loadStopData() {
+        val stopId = getStopIdFromIntent()
         database.stops().findById(stopId)
                 .subscribeOn(Schedulers.io())
                 .observeOn(AndroidSchedulers.mainThread())
                 .safely {
                     subscribe({
-                        title = "$stopId ${it.name}"
+                        swipeRefreshLayout.isRefreshing = false
+                        title = "${stopId} ${it.name}"
                         updateBusData(stopId)
                     }, {
+                        swipeRefreshLayout.isRefreshing = false
                         Toast.makeText(this@StopActivity, "Stop $stopId doesn't exist", Toast.LENGTH_SHORT).show()
                         it.printStackTrace()
                     })
