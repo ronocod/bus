@@ -6,6 +6,8 @@ import android.arch.persistence.room.Room
 import android.content.Context
 import android.os.Build
 import android.os.Bundle
+import android.support.design.widget.Snackbar
+import android.support.design.widget.Snackbar.LENGTH_INDEFINITE
 import android.support.v4.content.ContextCompat
 import android.support.v4.content.PermissionChecker.PERMISSION_GRANTED
 import android.support.v7.app.AppCompatActivity
@@ -152,14 +154,21 @@ class MapActivity : AppCompatActivity() {
         }
     }
 
+
+    private var snackbar: Snackbar? = null;
+
     private fun addMarkersForStops(stops: Single<MutableList<Stop>>, map: GoogleMap) {
         stops.subscribe({ list: MutableList<Stop> ->
             if (list.size > 160) {
                 mapView.post {
-                    map.clear()
-                    shortToast("Too many stops, zoom in")
+                    if (snackbar == null) {
+                        snackbar = Snackbar.make(mapContainer, "Too many stops, zoom in", LENGTH_INDEFINITE)
+
+                    }
+                    snackbar?.show()
                 }
             } else {
+                snackbar?.dismiss()
                 val markers = list.map { stop ->
                     val latLng = LatLng(stop.latitude, stop.longitude)
                     MarkerOptions()
