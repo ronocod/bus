@@ -85,6 +85,12 @@ class StopActivity : AppCompatActivity() {
 
     private fun RealTimeBusInfo.formatBusInfo() = "$route to $destination | ${formatDueTime()}"
 
+    private fun RealTimeBusInfo.formatDueTime() =
+            when (duetime) {
+                "Due" -> duetime
+                else -> "$duetime mins"
+            }
+
     private inline fun <T> Observable<T>.safely(subscription: Observable<T>.() -> Disposable) =
             disposable.add(subscription())
 
@@ -93,11 +99,5 @@ class StopActivity : AppCompatActivity() {
 
     private inline fun <T> Maybe<T>.safely(subscription: Maybe<T>.() -> Disposable) =
             disposable.add(subscription())
-
-    private fun RealTimeBusInfo.formatDueTime() =
-            when (duetime) {
-                "Due" -> duetime
-                else -> "$duetime mins"
-            }
 
 }

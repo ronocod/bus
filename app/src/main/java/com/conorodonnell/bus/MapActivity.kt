@@ -1,7 +1,6 @@
 package com.conorodonnell.bus
 
 import android.Manifest.permission.ACCESS_FINE_LOCATION
-import android.app.Activity
 import android.arch.persistence.room.Room
 import android.content.Context
 import android.os.Build
@@ -182,10 +181,6 @@ class MapActivity : AppCompatActivity() {
                 }
             }
         }, Throwable::printStackTrace)
-    }
-
-    private fun Activity.shortToast(message: String) {
-        Toast.makeText(this, message, LENGTH_SHORT).show()
     }
 
     override fun onStart() {

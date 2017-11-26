@@ -11,7 +11,7 @@ import java.util.List;
 import io.reactivex.Single;
 
 @Dao
-public interface StopDao {
+public interface StopRepository {
 
     @Query("SELECT COUNT(*) FROM Stop")
     Single<Integer> count();
