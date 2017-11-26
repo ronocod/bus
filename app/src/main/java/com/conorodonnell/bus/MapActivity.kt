@@ -40,7 +40,7 @@ private const val REQUESTED_LOCATION_PERMISSION = "requested_location_permission
 
 
 class MapActivity : AppCompatActivity() {
-    private val busService = Core.service()
+    private val apiClient = Core.apiClient()
     private val disposable = CompositeDisposable()
     private var database: AppDatabase = Room.databaseBuilder(this, AppDatabase::class.java, "bus").build()
 
@@ -50,7 +50,7 @@ class MapActivity : AppCompatActivity() {
 
         database.stops().count()
                 .filter { it == 0 }
-                .flatMapObservable { busService.fetchAllBusStops() }
+                .flatMapObservable { apiClient.fetchAllBusStops() }
                 .subscribeOn(Schedulers.io())
                 .safely {
                     subscribe {

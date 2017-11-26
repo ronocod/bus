@@ -11,7 +11,7 @@ object Core {
 
 
 
-    fun service(): BusService {
+    fun apiClient(): BusApiClient {
         val interceptor = HttpLoggingInterceptor()
         interceptor.level = HttpLoggingInterceptor.Level.NONE
         val client = OkHttpClient.Builder().addInterceptor(interceptor).build()
@@ -22,7 +22,7 @@ object Core {
                 .addConverterFactory(MoshiConverterFactory.create())
                 .addCallAdapterFactory(RxJava2CallAdapterFactory.create())
                 .build()
-                .create(BusService::class.java)
+                .create(BusApiClient::class.java)
     }
 
 }

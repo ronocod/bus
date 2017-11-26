@@ -29,7 +29,7 @@ class StopActivity : AppCompatActivity() {
         }
     }
 
-    private val busService = Core.service()
+    private val apiClient = Core.apiClient()
     private val disposable = CompositeDisposable()
 
     private var database: AppDatabase = Room.databaseBuilder(this, AppDatabase::class.java, "bus").build()
@@ -70,7 +70,7 @@ class StopActivity : AppCompatActivity() {
 
     private fun updateBusData(stopId: String) {
         busInfoText.text = "Loading..."
-        busService.fetchRealTimeInfo(stopId)
+        apiClient.fetchRealTimeInfo(stopId)
                 .map { it.results.joinToString("\n") { it.formatBusInfo() } }
                 .subscribeOn(Schedulers.io())
                 .observeOn(AndroidSchedulers.mainThread())
