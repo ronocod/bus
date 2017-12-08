@@ -30,7 +30,7 @@ android {
 }
 
 def roomVersion = "1.0.0"
-def playServicesVersion = '11.6.0'
+def playServicesVersion = '11.6.2'
 def supportLibraryVersion = '27.0.2'
 
 dependencies {
