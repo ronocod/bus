@@ -10,7 +10,7 @@ def googleMapsApiKey = properties.getProperty('googleMapsApiKey')
 
 android {
     compileSdkVersion 27
-    buildToolsVersion "27.0.1"
+    buildToolsVersion "27.0.2"
     defaultConfig {
         applicationId "com.conorodonnell.bus"
         minSdkVersion 19
