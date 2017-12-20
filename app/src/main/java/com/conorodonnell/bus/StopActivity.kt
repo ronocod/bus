@@ -9,7 +9,6 @@ import android.widget.Toast
 import com.conorodonnell.bus.api.Core
 import com.conorodonnell.bus.api.RealTimeBusInfo
 import com.conorodonnell.bus.persistence.AppDatabase
-import io.reactivex.Maybe
 import io.reactivex.Observable
 import io.reactivex.Single
 import io.reactivex.android.schedulers.AndroidSchedulers
@@ -95,9 +94,6 @@ class StopActivity : AppCompatActivity() {
             disposable.add(subscription())
 
     private inline fun <T> Single<T>.safely(subscription: Single<T>.() -> Disposable) =
-            disposable.add(subscription())
-
-    private inline fun <T> Maybe<T>.safely(subscription: Maybe<T>.() -> Disposable) =
             disposable.add(subscription())
 
 }
