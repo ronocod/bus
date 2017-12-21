@@ -1,7 +1,6 @@
 package com.conorodonnell.bus
 
 import android.Manifest.permission.ACCESS_FINE_LOCATION
-import android.arch.persistence.room.Room
 import android.content.Context
 import android.os.Build
 import android.os.Bundle
@@ -15,9 +14,7 @@ import android.view.Menu
 import android.widget.SearchView
 import android.widget.Toast
 import android.widget.Toast.LENGTH_SHORT
-import com.conorodonnell.bus.api.Core
 import com.conorodonnell.bus.api.StopInfo
-import com.conorodonnell.bus.persistence.AppDatabase
 import com.conorodonnell.bus.persistence.Stop
 import com.google.android.gms.location.LocationServices
 import com.google.android.gms.maps.CameraUpdateFactory
@@ -39,9 +36,9 @@ private const val REQUESTED_LOCATION_PERMISSION = "requested_location_permission
 
 
 class MapActivity : AppCompatActivity() {
-    private val apiClient = Core.apiClient()
     private val disposable = CompositeDisposable()
-    private var database: AppDatabase = Room.databaseBuilder(this, AppDatabase::class.java, "bus").build()
+    private val apiClient by lazy { (application as BusApplication).apiClient }
+    private val database by lazy { (application as BusApplication).database }
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)

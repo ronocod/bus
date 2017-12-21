@@ -1,14 +1,11 @@
 package com.conorodonnell.bus
 
-import android.arch.persistence.room.Room
 import android.content.Context
 import android.content.Intent
 import android.os.Bundle
 import android.support.v7.app.AppCompatActivity
 import android.widget.Toast
-import com.conorodonnell.bus.api.Core
 import com.conorodonnell.bus.api.RealTimeBusInfo
-import com.conorodonnell.bus.persistence.AppDatabase
 import io.reactivex.Observable
 import io.reactivex.Single
 import io.reactivex.android.schedulers.AndroidSchedulers
@@ -28,10 +25,9 @@ class StopActivity : AppCompatActivity() {
         }
     }
 
-    private val apiClient = Core.apiClient()
     private val disposable = CompositeDisposable()
-
-    private var database: AppDatabase = Room.databaseBuilder(this, AppDatabase::class.java, "bus").build()
+    private val apiClient by lazy { (application as BusApplication).apiClient }
+    private val database by lazy { (application as BusApplication).database }
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
