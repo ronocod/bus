@@ -53,7 +53,7 @@ class StopActivity : AppCompatActivity() {
                 .safely {
                     subscribe({
                         swipeRefreshLayout.isRefreshing = false
-                        title = "${stopId} ${it.name}"
+                        title = "$stopId ${it.name}"
                         updateBusData(stopId)
                     }, {
                         swipeRefreshLayout.isRefreshing = false
