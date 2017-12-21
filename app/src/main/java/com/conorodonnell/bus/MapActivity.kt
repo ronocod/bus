@@ -22,11 +22,9 @@ import com.google.android.gms.maps.GoogleMap
 import com.google.android.gms.maps.model.LatLng
 import com.google.android.gms.maps.model.LatLngBounds
 import com.google.android.gms.maps.model.MarkerOptions
-import io.reactivex.Observable
 import io.reactivex.Single
 import io.reactivex.android.schedulers.AndroidSchedulers
 import io.reactivex.disposables.CompositeDisposable
-import io.reactivex.disposables.Disposable
 import io.reactivex.schedulers.Schedulers
 import kotlinx.android.synthetic.main.activity_map.*
 import java.lang.Double.parseDouble
@@ -48,7 +46,7 @@ class MapActivity : AppCompatActivity() {
                 .filter { it == 0 }
                 .flatMapObservable { apiClient.fetchAllBusStops() }
                 .subscribeOn(Schedulers.io())
-                .safely {
+                .disposingIn(disposable) {
                     subscribe {
                         database.stops().insertAll(it.results.map { it.toEntity() })
                     }
@@ -150,7 +148,7 @@ class MapActivity : AppCompatActivity() {
     }
 
 
-    private var snackbar: Snackbar? = null;
+    private var snackbar: Snackbar? = null
 
     private fun addMarkersForStops(stops: Single<MutableList<Stop>>, map: GoogleMap) {
         stops.subscribe({ list: MutableList<Stop> ->
@@ -227,7 +225,7 @@ class MapActivity : AppCompatActivity() {
         database.stops().findById(stopId)
                 .subscribeOn(Schedulers.io())
                 .observeOn(AndroidSchedulers.mainThread())
-                .safely {
+                .disposingIn(disposable) {
                     subscribe({
                         startActivity(StopActivity.createIntent(this@MapActivity, stopId))
                     }, {
@@ -238,11 +236,5 @@ class MapActivity : AppCompatActivity() {
     }
 
     private fun StopInfo.toEntity(): Stop = Stop(stopid, fullname, parseDouble(latitude), parseDouble(longitude))
-
-    private inline fun <T> Observable<T>.safely(subscription: Observable<T>.() -> Disposable) =
-            disposable.add(subscription())
-
-    private inline fun <T> Single<T>.safely(subscription: Single<T>.() -> Disposable) =
-            disposable.add(subscription())
 
 }

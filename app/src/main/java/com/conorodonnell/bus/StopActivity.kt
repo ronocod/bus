@@ -5,12 +5,8 @@ import android.content.Intent
 import android.os.Bundle
 import android.support.v7.app.AppCompatActivity
 import android.widget.Toast
-import com.conorodonnell.bus.api.RealTimeBusInfo
-import io.reactivex.Observable
-import io.reactivex.Single
 import io.reactivex.android.schedulers.AndroidSchedulers
 import io.reactivex.disposables.CompositeDisposable
-import io.reactivex.disposables.Disposable
 import io.reactivex.schedulers.Schedulers
 import kotlinx.android.synthetic.main.activity_stop.*
 
@@ -50,7 +46,7 @@ class StopActivity : AppCompatActivity() {
         database.stops().findById(stopId)
                 .subscribeOn(Schedulers.io())
                 .observeOn(AndroidSchedulers.mainThread())
-                .safely {
+                .disposingIn(disposable) {
                     subscribe({
                         swipeRefreshLayout.isRefreshing = false
                         title = "$stopId ${it.name}"
@@ -69,7 +65,7 @@ class StopActivity : AppCompatActivity() {
                 .map { it.results.joinToString("\n") { it.formatBusInfo() } }
                 .subscribeOn(Schedulers.io())
                 .observeOn(AndroidSchedulers.mainThread())
-                .safely {
+                .disposingIn(disposable) {
                     subscribe({
                         busInfoText.text = it
                     }, {
@@ -77,19 +73,5 @@ class StopActivity : AppCompatActivity() {
                     })
                 }
     }
-
-    private fun RealTimeBusInfo.formatBusInfo() = "$route to $destination | ${formatDueTime()}"
-
-    private fun RealTimeBusInfo.formatDueTime() =
-            when (duetime) {
-                "Due" -> duetime
-                else -> "$duetime mins"
-            }
-
-    private inline fun <T> Observable<T>.safely(subscription: Observable<T>.() -> Disposable) =
-            disposable.add(subscription())
-
-    private inline fun <T> Single<T>.safely(subscription: Single<T>.() -> Disposable) =
-            disposable.add(subscription())
 
 }
