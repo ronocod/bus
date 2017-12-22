@@ -225,9 +225,12 @@ class MapActivity : AppCompatActivity() {
                 .subscribeOn(Schedulers.io())
                 .observeOn(AndroidSchedulers.mainThread())
                 .disposingIn(disposable) {
-                    subscribe({
-                        sheetTitle.text = "${it.id} - ${it.name}"
+                    subscribe({ stop ->
+                        sheetTitle.text = "${stop.id} - ${stop.name}"
                         updateBusData(stopId)
+                        mapView.getMapAsync { map ->
+                            map.animateCamera(CameraUpdateFactory.newLatLng(LatLng(stop.latitude, stop.longitude)))
+                        }
                         sheetBehavior.state = BottomSheetBehavior.STATE_COLLAPSED
                     }, {
                         Toast.makeText(this@MapActivity, "Stop $stopId doesn't exist", LENGTH_SHORT).show()
