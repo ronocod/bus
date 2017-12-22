@@ -4,6 +4,7 @@ import android.Manifest.permission.ACCESS_FINE_LOCATION
 import android.content.Context
 import android.os.Build
 import android.os.Bundle
+import android.support.design.widget.BottomSheetBehavior
 import android.support.design.widget.Snackbar
 import android.support.design.widget.Snackbar.LENGTH_INDEFINITE
 import android.support.v4.content.ContextCompat
@@ -11,6 +12,8 @@ import android.support.v4.content.PermissionChecker.PERMISSION_GRANTED
 import android.support.v7.app.AppCompatActivity
 import android.text.InputType
 import android.view.Menu
+import android.view.View
+import android.widget.LinearLayout
 import android.widget.SearchView
 import android.widget.Toast
 import android.widget.Toast.LENGTH_SHORT
@@ -37,6 +40,10 @@ class MapActivity : AppCompatActivity() {
     private val disposable = CompositeDisposable()
     private val apiClient by lazy { (application as BusApplication).apiClient }
     private val database by lazy { (application as BusApplication).database }
+
+    private val sheetBehavior: BottomSheetBehavior<LinearLayout> by lazy {
+        BottomSheetBehavior.from(bottomSheet)
+    }
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -100,10 +107,6 @@ class MapActivity : AppCompatActivity() {
 
     private fun setupMap(map: GoogleMap) {
 
-        map.setOnInfoWindowClickListener { item ->
-            loadStop(item.title)
-        }
-
         val idleListener = {
             addMarkersForStops(loadStopsIn(map.projection.visibleRegion.latLngBounds), map)
         }
@@ -112,8 +115,22 @@ class MapActivity : AppCompatActivity() {
             map.setOnCameraIdleListener {
                 map.setOnCameraIdleListener(idleListener)
             }
-            return@setOnMarkerClickListener false
+            loadStop(it.title)
+            it.showInfoWindow()
+            map.animateCamera(CameraUpdateFactory.newLatLng(it.position), 200, null)
+            return@setOnMarkerClickListener true
         }
+
+        sheetBehavior.state = BottomSheetBehavior.STATE_HIDDEN
+        sheetBehavior.setBottomSheetCallback(object : BottomSheetBehavior.BottomSheetCallback() {
+            override fun onStateChanged(bottomSheet: View, newState: Int) {
+
+            }
+
+            override fun onSlide(bottomSheet: View, slideOffset: Float) {
+
+            }
+        })
 
         loadDefaultLocation(map)
         if (ContextCompat.checkSelfPermission(this, ACCESS_FINE_LOCATION) != PERMISSION_GRANTED) {
@@ -134,10 +151,11 @@ class MapActivity : AppCompatActivity() {
                             loadMarkers(map))
                 }
 
+
     }
 
     private fun loadDefaultLocation(map: GoogleMap) {
-        map.moveCamera(CameraUpdateFactory.newLatLngZoom(LatLng(53.36, -6.245), 12f))
+        map.moveCamera(CameraUpdateFactory.newLatLngZoom(LatLng(53.36, -6.245), 17f))
         loadMarkers(map)
     }
 
@@ -169,11 +187,9 @@ class MapActivity : AppCompatActivity() {
             } else {
                 snackbar?.dismiss()
                 val markers = list.map { stop ->
-                    val latLng = LatLng(stop.latitude, stop.longitude)
                     MarkerOptions()
-                            .position(latLng)
+                            .position(LatLng(stop.latitude, stop.longitude))
                             .title(stop.id)
-                            .snippet(stop.name)
                 }
                 mapView.post {
                     map.clear()
@@ -208,9 +224,26 @@ class MapActivity : AppCompatActivity() {
                 .observeOn(AndroidSchedulers.mainThread())
                 .disposingIn(disposable) {
                     subscribe({
-                        startActivity(StopActivity.createIntent(this@MapActivity, stopId))
+                        sheetTitle.text = "${it.id} - ${it.name}"
+                        updateBusData(stopId)
+                        sheetBehavior.state = BottomSheetBehavior.STATE_EXPANDED
                     }, {
                         Toast.makeText(this@MapActivity, "Stop $stopId doesn't exist", LENGTH_SHORT).show()
+                        it.printStackTrace()
+                    })
+                }
+    }
+
+    private fun updateBusData(stopId: String) {
+        sheetContent.text = "Loading..."
+        apiClient.fetchRealTimeInfo(stopId)
+                .map { it.results.joinToString("\n") { it.formatBusInfo() } }
+                .subscribeOn(Schedulers.io())
+                .observeOn(AndroidSchedulers.mainThread())
+                .disposingIn(disposable) {
+                    subscribe({
+                        sheetContent.text = it
+                    }, {
                         it.printStackTrace()
                     })
                 }
