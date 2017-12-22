@@ -22,9 +22,7 @@ import com.conorodonnell.bus.persistence.Stop
 import com.google.android.gms.location.LocationServices
 import com.google.android.gms.maps.CameraUpdateFactory
 import com.google.android.gms.maps.GoogleMap
-import com.google.android.gms.maps.model.LatLng
-import com.google.android.gms.maps.model.LatLngBounds
-import com.google.android.gms.maps.model.MarkerOptions
+import com.google.android.gms.maps.model.*
 import io.reactivex.Single
 import io.reactivex.android.schedulers.AndroidSchedulers
 import io.reactivex.disposables.CompositeDisposable
@@ -40,6 +38,10 @@ class MapActivity : AppCompatActivity() {
     private val disposable = CompositeDisposable()
     private val apiClient by lazy { (application as BusApplication).apiClient }
     private val database by lazy { (application as BusApplication).database }
+    private val defaultMarkerIcon by lazy { BitmapDescriptorFactory.defaultMarker() }
+    private val clickedMarkerIcon by lazy { BitmapDescriptorFactory.defaultMarker(BitmapDescriptorFactory.HUE_AZURE) }
+
+    private var lastClickedMarker: Marker? = null
 
     private val sheetBehavior: BottomSheetBehavior<LinearLayout> by lazy {
         BottomSheetBehavior.from(bottomSheet)
@@ -111,11 +113,20 @@ class MapActivity : AppCompatActivity() {
             addMarkersForStops(loadStopsIn(map.projection.visibleRegion.latLngBounds), map)
         }
         map.setOnCameraIdleListener(idleListener)
+        map.setOnMapClickListener {
+            lastClickedMarker?.setIcon(defaultMarkerIcon)
+            lastClickedMarker = null
+            sheetBehavior.state = BottomSheetBehavior.STATE_HIDDEN
+        }
         map.setOnMarkerClickListener {
             map.setOnCameraIdleListener {
                 map.setOnCameraIdleListener(idleListener)
             }
+
+            lastClickedMarker?.setIcon(defaultMarkerIcon)
+            lastClickedMarker = it
             loadStop(it.title)
+            it.setIcon(clickedMarkerIcon)
             return@setOnMarkerClickListener false
         }
 
@@ -152,8 +163,6 @@ class MapActivity : AppCompatActivity() {
                     map.animateCamera(CameraUpdateFactory.newLatLngZoom(latLng, 16f),
                             loadMarkers(map))
                 }
-
-
     }
 
     private fun loadDefaultLocation(map: GoogleMap) {
@@ -195,6 +204,8 @@ class MapActivity : AppCompatActivity() {
                 }
                 runOnUiThread {
                     map.clear()
+                    lastClickedMarker = null
+                    sheetBehavior.state = BottomSheetBehavior.STATE_HIDDEN
                     markers.forEach { map.addMarker(it) }
                 }
             }
