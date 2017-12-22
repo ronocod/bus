@@ -29,10 +29,12 @@ import io.reactivex.disposables.CompositeDisposable
 import io.reactivex.schedulers.Schedulers
 import kotlinx.android.synthetic.main.activity_map.*
 import java.lang.Double.parseDouble
+import java.util.*
 
 private const val PREFS = "prefs"
 private const val REQUESTED_LOCATION_PERMISSION = "requested_location_permission"
 
+private const val MAX_VISIBLE_STOPS = 160
 
 class MapActivity : AppCompatActivity() {
     private val disposable = CompositeDisposable()
@@ -42,6 +44,8 @@ class MapActivity : AppCompatActivity() {
     private val clickedMarkerIcon by lazy { BitmapDescriptorFactory.defaultMarker(BitmapDescriptorFactory.HUE_AZURE) }
 
     private var lastClickedMarker: Marker? = null
+
+    private val markerStops = HashMap<Marker, String>(MAX_VISIBLE_STOPS)
 
     private val sheetBehavior: BottomSheetBehavior<ConstraintLayout> by lazy {
         BottomSheetBehavior.from(bottomSheet)
@@ -129,15 +133,16 @@ class MapActivity : AppCompatActivity() {
             lastClickedMarker = null
             sheetBehavior.state = BottomSheetBehavior.STATE_HIDDEN
         }
-        map.setOnMarkerClickListener {
+        map.setOnMarkerClickListener { marker ->
             map.setOnCameraIdleListener {
                 map.setOnCameraIdleListener(idleListener)
             }
-
+            
             lastClickedMarker?.setIcon(defaultMarkerIcon)
-            lastClickedMarker = it
-            loadStop(it.title)
-            it.setIcon(clickedMarkerIcon)
+            lastClickedMarker = marker
+            val stopId = markerStops[marker]
+            loadStop(stopId!!)
+            marker.setIcon(clickedMarkerIcon)
             return@setOnMarkerClickListener false
         }
 
@@ -198,21 +203,22 @@ class MapActivity : AppCompatActivity() {
             if (list.isEmpty()) {
                 return@subscribe
             }
-            if (list.size > 160) {
+            if (list.size > MAX_VISIBLE_STOPS) {
                 showIndefiniteSnackbar("Too many stops, zoom in")
                 return@subscribe
             }
-            snackbar?.dismiss()
-            val markers = list.map { stop ->
-                MarkerOptions()
-                        .position(LatLng(stop.latitude, stop.longitude))
-                        .title(stop.id)
-            }
             runOnUiThread {
+                markerStops.clear()
+                snackbar?.dismiss()
                 map.clear()
                 lastClickedMarker = null
                 sheetBehavior.state = BottomSheetBehavior.STATE_HIDDEN
-                markers.forEach { map.addMarker(it) }
+
+                list.forEach { stop ->
+                    val marker = map.addMarker(MarkerOptions()
+                            .position(LatLng(stop.latitude, stop.longitude)))
+                    markerStops[marker] = stop.id
+                }
             }
         }, Throwable::printStackTrace)
     }
