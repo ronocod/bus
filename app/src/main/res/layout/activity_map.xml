@@ -23,7 +23,10 @@
         android:background="@android:color/white"
         android:elevation="8dp"
         android:minHeight="@dimen/stop_bottom_sheet_collapsed_height"
-        android:padding="16dp"
+        android:paddingBottom="16dp"
+        android:paddingEnd="16dp"
+        android:paddingStart="16dp"
+        android:paddingTop="8dp"
         app:behavior_hideable="true"
         app:behavior_peekHeight="@dimen/stop_bottom_sheet_collapsed_height"
         app:layout_behavior="android.support.design.widget.BottomSheetBehavior"
@@ -33,6 +36,8 @@
             android:id="@+id/sheetTitle"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
+            android:paddingBottom="4dp"
+            android:paddingTop="4dp"
             android:textSize="17sp"
             android:textStyle="bold"
             tools:text="1 - Parnell Street"/>
@@ -43,6 +48,17 @@
             android:layout_height="wrap_content"
             app:layout_constraintTop_toBottomOf="@id/sheetTitle"
             tools:text="1 to Dublin\n2 to Galway"/>
+
+        <ImageButton
+            android:id="@+id/refreshButton"
+            style="@style/Widget.AppCompat.Button.Borderless"
+            android:layout_width="32dp"
+            android:layout_height="32dp"
+            android:foregroundTint="@color/colorPrimary"
+            android:scaleType="center"
+            android:tint="@color/colorPrimary"
+            app:layout_constraintRight_toRightOf="@id/bottomSheet"
+            app:srcCompat="@drawable/ic_refresh_black_24dp"/>
 
     </android.support.constraint.ConstraintLayout>
 </android.support.design.widget.CoordinatorLayout>

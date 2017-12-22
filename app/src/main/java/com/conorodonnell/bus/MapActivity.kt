@@ -249,6 +249,9 @@ class MapActivity : AppCompatActivity() {
 
     private fun updateBusData(stopId: String) {
         sheetContent.text = "Loading..."
+        refreshButton.setOnClickListener {
+            updateBusData(stopId)
+        }
         apiClient.fetchRealTimeInfo(stopId)
                 .map { it.results.joinToString("\n") { it.formatBusInfo() } }
                 .subscribeOn(Schedulers.io())
