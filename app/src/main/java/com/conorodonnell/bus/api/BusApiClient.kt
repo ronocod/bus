@@ -8,9 +8,6 @@ interface BusApiClient {
     @GET("realtimebusinformation")
     fun fetchRealTimeInfo(@Query("stopid") stopId: String): Observable<RealTimeResult>
 
-    @GET("busstopinformation")
-    fun fetchStop(@Query("stopid") stopId: String): Observable<StopResult>
-
     @GET("busstopinformation?operator=bac")
     fun fetchAllBusStops(): Observable<StopResult>
 }

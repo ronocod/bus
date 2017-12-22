@@ -2,6 +2,7 @@ package com.conorodonnell.bus
 
 import android.app.Application
 import android.arch.persistence.room.Room
+import android.os.AsyncTask
 import com.conorodonnell.bus.api.BusApiClient
 import com.conorodonnell.bus.persistence.AppDatabase
 import okhttp3.OkHttpClient
@@ -26,8 +27,23 @@ class BusApplication : Application() {
                 .client(client)
                 .addConverterFactory(MoshiConverterFactory.create())
                 .addCallAdapterFactory(RxJava2CallAdapterFactory.create())
+                .validateEagerly(true)
                 .build()
                 .create(BusApiClient::class.java)
     }
 
+    override fun onCreate() {
+        super.onCreate()
+        initialiseComponentsInBackground()
+    }
+
+    private fun initialiseComponentsInBackground() {
+        AsyncTask.execute {
+            // Accessing these properties triggers their lazy initialisation.
+            // Doing this in a background thread on app launch means less blocking of the main thread when they're
+            // accessed for the first time there.
+            apiClient
+            database
+        }
+    }
 }
