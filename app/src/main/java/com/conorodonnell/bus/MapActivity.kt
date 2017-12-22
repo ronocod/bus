@@ -52,9 +52,6 @@ class MapActivity : AppCompatActivity() {
                     }
                 }
 
-        mapView.onCreate(savedInstanceState)
-        mapView.getMapAsync(this::setupMap)
-
         if (ContextCompat.checkSelfPermission(this, ACCESS_FINE_LOCATION) != PERMISSION_GRANTED
                 && Build.VERSION.SDK_INT >= Build.VERSION_CODES.M
                 && !hasRequestedPermission()) {
@@ -64,6 +61,15 @@ class MapActivity : AppCompatActivity() {
                     .putBoolean(REQUESTED_LOCATION_PERMISSION, true)
                     .apply()
         }
+
+        mapView.onCreate(savedInstanceState)
+        lifecycle.addObserver(MapViewLifecycleObserver(mapView))
+        mapView.getMapAsync(this::setupMap)
+    }
+
+    override fun onDestroy() {
+        super.onDestroy()
+        disposable.clear()
     }
 
     private fun preferences() = getSharedPreferences(PREFS, Context.MODE_PRIVATE)
@@ -175,31 +181,6 @@ class MapActivity : AppCompatActivity() {
                 }
             }
         }, Throwable::printStackTrace)
-    }
-
-    override fun onStart() {
-        super.onStart()
-        mapView.onStart()
-    }
-
-    override fun onResume() {
-        super.onResume()
-        mapView.onResume()
-    }
-
-    override fun onPause() {
-        super.onPause()
-        mapView.onPause()
-    }
-
-    override fun onStop() {
-        super.onStop()
-        mapView.onStop()
-    }
-
-    override fun onDestroy() {
-        super.onDestroy()
-        disposable.clear()
     }
 
     override fun onRequestPermissionsResult(requestCode: Int, permissions: Array<out String>, grantResults: IntArray) {
