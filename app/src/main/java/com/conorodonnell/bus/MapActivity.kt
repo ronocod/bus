@@ -23,7 +23,7 @@ import com.google.android.gms.location.LocationServices
 import com.google.android.gms.maps.CameraUpdateFactory
 import com.google.android.gms.maps.GoogleMap
 import com.google.android.gms.maps.model.*
-import io.reactivex.Single
+import io.reactivex.Flowable
 import io.reactivex.android.schedulers.AndroidSchedulers
 import io.reactivex.disposables.CompositeDisposable
 import io.reactivex.schedulers.Schedulers
@@ -51,15 +51,19 @@ class MapActivity : AppCompatActivity() {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_map)
 
-        database.stops().count()
-                .filter { it == 0 }
-                .flatMapObservable { apiClient.fetchAllBusStops() }
-                .subscribeOn(Schedulers.io())
-                .disposingIn(disposable) {
-                    subscribe {
-                        database.stops().insertAll(it.results.map { it.toEntity() })
+        mapContainer.postDelayed({
+            database.stops().count()
+                    .filter { it == 0 }
+                    .doOnSuccess { showIndefiniteSnackbar("Downloading stops...") }
+                    .flatMapObservable { apiClient.fetchAllBusStops() }
+                    .subscribeOn(Schedulers.io())
+                    .disposingIn(disposable) {
+                        subscribe {
+                            database.stops().insertAll(it.results.map { it.toEntity() })
+                            runOnUiThread { snackbar?.dismiss() }
+                        }
                     }
-                }
+        }, 500)
 
         if (ContextCompat.checkSelfPermission(this, ACCESS_FINE_LOCATION) != PERMISSION_GRANTED
                 && Build.VERSION.SDK_INT >= Build.VERSION_CODES.M
@@ -74,6 +78,13 @@ class MapActivity : AppCompatActivity() {
         mapView.onCreate(savedInstanceState)
         lifecycle.addObserver(MapViewLifecycleObserver(mapView))
         mapView.getMapAsync(this::setupMap)
+    }
+
+    private fun showIndefiniteSnackbar(message: String) {
+        runOnUiThread {
+            snackbar = Snackbar.make(mapContainer, message, LENGTH_INDEFINITE)
+            snackbar?.show()
+        }
     }
 
     override fun onDestroy() {
@@ -182,29 +193,26 @@ class MapActivity : AppCompatActivity() {
 
     private var snackbar: Snackbar? = null
 
-    private fun addMarkersForStops(stops: Single<MutableList<Stop>>, map: GoogleMap) {
+    private fun addMarkersForStops(stops: Flowable<MutableList<Stop>>, map: GoogleMap) {
         stops.subscribe({ list: MutableList<Stop> ->
+            if (list.isEmpty()) {
+                return@subscribe
+            }
             if (list.size > 160) {
-                runOnUiThread {
-                    if (snackbar == null) {
-                        snackbar = Snackbar.make(mapContainer, "Too many stops, zoom in", LENGTH_INDEFINITE)
-
-                    }
-                    snackbar?.show()
-                }
-            } else {
-                snackbar?.dismiss()
-                val markers = list.map { stop ->
-                    MarkerOptions()
-                            .position(LatLng(stop.latitude, stop.longitude))
-                            .title(stop.id)
-                }
-                runOnUiThread {
-                    map.clear()
-                    lastClickedMarker = null
-                    sheetBehavior.state = BottomSheetBehavior.STATE_HIDDEN
-                    markers.forEach { map.addMarker(it) }
-                }
+                showIndefiniteSnackbar("Too many stops, zoom in")
+                return@subscribe
+            }
+            snackbar?.dismiss()
+            val markers = list.map { stop ->
+                MarkerOptions()
+                        .position(LatLng(stop.latitude, stop.longitude))
+                        .title(stop.id)
+            }
+            runOnUiThread {
+                map.clear()
+                lastClickedMarker = null
+                sheetBehavior.state = BottomSheetBehavior.STATE_HIDDEN
+                markers.forEach { map.addMarker(it) }
             }
         }, Throwable::printStackTrace)
     }
@@ -220,7 +228,7 @@ class MapActivity : AppCompatActivity() {
         }
     }
 
-    private fun loadStopsIn(area: LatLngBounds): Single<MutableList<Stop>> {
+    private fun loadStopsIn(area: LatLngBounds): Flowable<MutableList<Stop>> {
         val ne = area.northeast
         val sw = area.southwest
         return database.stops()
