@@ -1,12 +1,18 @@
 buildscript {
-    ext.kotlin_version = '1.2.10'
+    ext.versions = [
+            room          : "1.0.0",
+            playServices  : '11.8.0',
+            supportLibrary: '27.0.2',
+            kotlin        : '1.2.10',
+            retrofit      : '2.3.0',
+    ]
     repositories {
         google()
         jcenter()
     }
     dependencies {
         classpath 'com.android.tools.build:gradle:3.0.1'
-        classpath "org.jetbrains.kotlin:kotlin-gradle-plugin:$kotlin_version"
+        classpath "org.jetbrains.kotlin:kotlin-gradle-plugin:$versions.kotlin"
     }
 }
 
