@@ -4,6 +4,7 @@ import android.Manifest.permission.ACCESS_FINE_LOCATION
 import android.content.Context
 import android.os.Build
 import android.os.Bundle
+import android.support.constraint.ConstraintLayout
 import android.support.design.widget.BottomSheetBehavior
 import android.support.design.widget.Snackbar
 import android.support.design.widget.Snackbar.LENGTH_INDEFINITE
@@ -13,7 +14,6 @@ import android.support.v7.app.AppCompatActivity
 import android.text.InputType
 import android.view.Menu
 import android.view.View
-import android.widget.LinearLayout
 import android.widget.SearchView
 import android.widget.Toast
 import android.widget.Toast.LENGTH_SHORT
@@ -43,7 +43,7 @@ class MapActivity : AppCompatActivity() {
 
     private var lastClickedMarker: Marker? = null
 
-    private val sheetBehavior: BottomSheetBehavior<LinearLayout> by lazy {
+    private val sheetBehavior: BottomSheetBehavior<ConstraintLayout> by lazy {
         BottomSheetBehavior.from(bottomSheet)
     }
 
@@ -145,7 +145,7 @@ class MapActivity : AppCompatActivity() {
             }
         })
 
-        loadDefaultLocation(map)
+        loadVisibleMarkers(map)
         if (ContextCompat.checkSelfPermission(this, ACCESS_FINE_LOCATION) != PERMISSION_GRANTED) {
             return
         }
@@ -156,32 +156,29 @@ class MapActivity : AppCompatActivity() {
                 .lastLocation
                 .addOnSuccessListener { location ->
                     if (location == null) {
-                        loadDefaultLocation(map)
+                        loadVisibleMarkers(map)
                         return@addOnSuccessListener
                     }
                     val latLng = LatLng(location.latitude, location.longitude)
-                    map.animateCamera(CameraUpdateFactory.newLatLngZoom(latLng, 16f),
-                            loadMarkers(map))
+                    map.animateCamera(CameraUpdateFactory.newLatLngZoom(latLng, 16f), loadMarkers(map))
                 }
-    }
-
-    private fun loadDefaultLocation(map: GoogleMap) {
-        map.moveCamera(CameraUpdateFactory.newLatLngZoom(LatLng(53.36, -6.245), 17f))
-        loadMarkers(map)
     }
 
     private fun loadMarkers(map: GoogleMap): GoogleMap.CancelableCallback {
         return object : GoogleMap.CancelableCallback {
             override fun onFinish() {
-                addMarkersForStops(loadStopsIn(map.projection.visibleRegion.latLngBounds), map)
+                loadVisibleMarkers(map)
             }
 
             override fun onCancel() {
-                addMarkersForStops(loadStopsIn(map.projection.visibleRegion.latLngBounds), map)
+                loadVisibleMarkers(map)
             }
         }
     }
 
+    private fun loadVisibleMarkers(map: GoogleMap) {
+        addMarkersForStops(loadStopsIn(map.projection.visibleRegion.latLngBounds), map)
+    }
 
     private var snackbar: Snackbar? = null
 

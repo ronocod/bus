@@ -11,34 +11,38 @@
     <com.google.android.gms.maps.MapView
         android:id="@+id/mapView"
         android:layout_width="match_parent"
-        android:layout_height="match_parent"/>
+        android:layout_height="match_parent"
+        app:cameraTargetLat="53.348"
+        app:cameraTargetLng="-6.259"
+        app:cameraZoom="15"/>
 
-    <LinearLayout android:id="@+id/bottomSheet"
-                  android:layout_width="match_parent"
-                  android:layout_height="wrap_content"
-                  android:background="@android:color/white"
-                  android:elevation="8dp"
-                  android:minHeight="128dp"
-                  android:orientation="vertical"
-                  app:behavior_hideable="true"
-                  app:behavior_peekHeight="128dp"
-                  app:layout_behavior="android.support.design.widget.BottomSheetBehavior"
-                  tools:ignore="UnusedAttribute">
+    <android.support.constraint.ConstraintLayout
+        android:id="@+id/bottomSheet"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:background="@android:color/white"
+        android:elevation="8dp"
+        android:minHeight="@dimen/stop_bottom_sheet_collapsed_height"
+        android:padding="16dp"
+        app:behavior_hideable="true"
+        app:behavior_peekHeight="@dimen/stop_bottom_sheet_collapsed_height"
+        app:layout_behavior="android.support.design.widget.BottomSheetBehavior"
+        tools:ignore="UnusedAttribute">
 
         <TextView
             android:id="@+id/sheetTitle"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:gravity="center"
-            android:padding="16dp"
             android:textSize="17sp"
-            android:textStyle="bold"/>
+            android:textStyle="bold"
+            tools:text="1 - Parnell Street"/>
 
         <TextView
             android:id="@+id/sheetContent"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:padding="16dp"/>
+            app:layout_constraintTop_toBottomOf="@id/sheetTitle"
+            tools:text="1 to Dublin\n2 to Galway"/>
 
-    </LinearLayout>
+    </android.support.constraint.ConstraintLayout>
 </android.support.design.widget.CoordinatorLayout>
