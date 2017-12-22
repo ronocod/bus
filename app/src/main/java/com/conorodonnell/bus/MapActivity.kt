@@ -179,7 +179,7 @@ class MapActivity : AppCompatActivity() {
     private fun addMarkersForStops(stops: Single<MutableList<Stop>>, map: GoogleMap) {
         stops.subscribe({ list: MutableList<Stop> ->
             if (list.size > 160) {
-                mapView.post {
+                runOnUiThread {
                     if (snackbar == null) {
                         snackbar = Snackbar.make(mapContainer, "Too many stops, zoom in", LENGTH_INDEFINITE)
 
@@ -193,7 +193,7 @@ class MapActivity : AppCompatActivity() {
                             .position(LatLng(stop.latitude, stop.longitude))
                             .title(stop.id)
                 }
-                mapView.post {
+                runOnUiThread {
                     map.clear()
                     markers.forEach { map.addMarker(it) }
                 }
