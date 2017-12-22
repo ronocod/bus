@@ -116,15 +116,17 @@ class MapActivity : AppCompatActivity() {
                 map.setOnCameraIdleListener(idleListener)
             }
             loadStop(it.title)
-            it.showInfoWindow()
-            map.animateCamera(CameraUpdateFactory.newLatLng(it.position), 200, null)
-            return@setOnMarkerClickListener true
+            return@setOnMarkerClickListener false
         }
 
         sheetBehavior.state = BottomSheetBehavior.STATE_HIDDEN
         sheetBehavior.setBottomSheetCallback(object : BottomSheetBehavior.BottomSheetCallback() {
             override fun onStateChanged(bottomSheet: View, newState: Int) {
-
+                if (newState == BottomSheetBehavior.STATE_HIDDEN) {
+                    map.setPadding(0, 0, 0, 0)
+                } else {
+                    map.setPadding(0, 0, 0, (128 * resources.displayMetrics.density).toInt())
+                }
             }
 
             override fun onSlide(bottomSheet: View, slideOffset: Float) {
@@ -226,7 +228,7 @@ class MapActivity : AppCompatActivity() {
                     subscribe({
                         sheetTitle.text = "${it.id} - ${it.name}"
                         updateBusData(stopId)
-                        sheetBehavior.state = BottomSheetBehavior.STATE_EXPANDED
+                        sheetBehavior.state = BottomSheetBehavior.STATE_COLLAPSED
                     }, {
                         Toast.makeText(this@MapActivity, "Stop $stopId doesn't exist", LENGTH_SHORT).show()
                         it.printStackTrace()
