@@ -10,10 +10,9 @@ def googleMapsApiKey = properties.getProperty('googleMapsApiKey')
 
 android {
     compileSdkVersion 27
-    buildToolsVersion "27.0.2"
     defaultConfig {
         applicationId "com.conorodonnell.bus"
-        minSdkVersion 19
+        minSdkVersion 21
         targetSdkVersion 27
         versionCode 1
         versionName "1.0"
@@ -34,14 +33,18 @@ dependencies {
     implementation "org.jetbrains.kotlin:kotlin-stdlib-jre7:$versions.kotlin"
     implementation "com.android.support:appcompat-v7:$versions.supportLibrary"
     implementation "com.android.support:design:$versions.supportLibrary"
-    implementation 'com.android.support.constraint:constraint-layout:1.0.2'
+    implementation 'com.android.support.constraint:constraint-layout:1.1.0'
     implementation "com.android.support:support-vector-drawable:$versions.supportLibrary"
     implementation "com.squareup.retrofit2:retrofit:$versions.retrofit"
     implementation "com.squareup.retrofit2:adapter-rxjava2:$versions.retrofit"
     implementation "com.squareup.retrofit2:converter-moshi:$versions.retrofit"
-    implementation 'com.squareup.okhttp3:logging-interceptor:3.9.0'
-    implementation "io.reactivex.rxjava2:rxjava:2.1.7"
-    implementation 'io.reactivex.rxjava2:rxandroid:2.0.1'
+    implementation 'com.squareup.okhttp3:okhttp:3.10.0'
+    implementation 'com.squareup.okhttp3:logging-interceptor:3.10.0'
+
+    implementation "io.reactivex.rxjava2:rxjava:2.1.12"
+    implementation 'io.reactivex.rxjava2:rxandroid:2.0.2'
+    implementation 'io.reactivex.rxjava2:rxkotlin:2.2.0'
+
     implementation "android.arch.persistence.room:runtime:$versions.room"
     implementation "android.arch.persistence.room:rxjava2:$versions.room"
     implementation "com.google.android.gms:play-services-maps:$versions.playServices"

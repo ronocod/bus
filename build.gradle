@@ -2,18 +2,22 @@ buildscript {
     ext.versions = [
             room          : "1.0.0",
             playServices  : '11.8.0',
-            supportLibrary: '27.0.2',
-            kotlin        : '1.2.10',
-            retrofit      : '2.3.0',
+            supportLibrary: '27.1.1',
+            kotlin        : '1.2.31',
+            retrofit      : '2.4.0',
     ]
     repositories {
         google()
         jcenter()
     }
     dependencies {
-        classpath 'com.android.tools.build:gradle:3.0.1'
+        classpath 'com.android.tools.build:gradle:3.1.1'
         classpath "org.jetbrains.kotlin:kotlin-gradle-plugin:$versions.kotlin"
     }
+}
+
+plugins {
+    id "com.github.ben-manes.versions" version "0.17.0"
 }
 
 allprojects {

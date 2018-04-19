@@ -26,6 +26,7 @@ import com.google.android.gms.maps.model.*
 import io.reactivex.Flowable
 import io.reactivex.android.schedulers.AndroidSchedulers
 import io.reactivex.disposables.CompositeDisposable
+import io.reactivex.rxkotlin.addTo
 import io.reactivex.schedulers.Schedulers
 import kotlinx.android.synthetic.main.activity_map.*
 import java.lang.Double.parseDouble
@@ -61,12 +62,10 @@ class MapActivity : AppCompatActivity() {
                     .doOnSuccess { showIndefiniteSnackbar("Downloading stops...") }
                     .flatMapObservable { apiClient.fetchAllBusStops() }
                     .subscribeOn(Schedulers.io())
-                    .disposingIn(disposable) {
-                        subscribe {
-                            database.stops().insertAll(it.results.map { it.toEntity() })
-                            runOnUiThread { snackbar?.dismiss() }
-                        }
-                    }
+                    .subscribe {
+                        database.stops().insertAll(it.results.map { it.toEntity() })
+                        runOnUiThread { snackbar?.dismiss() }
+                    }.addTo(disposable)
         }, 500)
 
         if (ContextCompat.checkSelfPermission(this, ACCESS_FINE_LOCATION) != PERMISSION_GRANTED
@@ -137,7 +136,7 @@ class MapActivity : AppCompatActivity() {
             map.setOnCameraIdleListener {
                 map.setOnCameraIdleListener(idleListener)
             }
-            
+
             lastClickedMarker?.setIcon(defaultMarkerIcon)
             lastClickedMarker = marker
             val stopId = markerStops[marker]
@@ -246,19 +245,17 @@ class MapActivity : AppCompatActivity() {
         database.stops().findById(stopId)
                 .subscribeOn(Schedulers.io())
                 .observeOn(AndroidSchedulers.mainThread())
-                .disposingIn(disposable) {
-                    subscribe({ stop ->
-                        sheetTitle.text = "${stop.id} - ${stop.name}"
-                        updateBusData(stopId)
-                        mapView.getMapAsync { map ->
-                            map.animateCamera(CameraUpdateFactory.newLatLng(LatLng(stop.latitude, stop.longitude)))
-                        }
-                        sheetBehavior.state = BottomSheetBehavior.STATE_COLLAPSED
-                    }, {
-                        Toast.makeText(this@MapActivity, "Stop $stopId doesn't exist", LENGTH_SHORT).show()
-                        it.printStackTrace()
-                    })
-                }
+                .subscribe({ stop ->
+                    sheetTitle.text = "${stop.id} - ${stop.name}"
+                    updateBusData(stopId)
+                    mapView.getMapAsync { map ->
+                        map.animateCamera(CameraUpdateFactory.newLatLng(LatLng(stop.latitude, stop.longitude)))
+                    }
+                    sheetBehavior.state = BottomSheetBehavior.STATE_COLLAPSED
+                }, {
+                    Toast.makeText(this@MapActivity, "Stop $stopId doesn't exist", LENGTH_SHORT).show()
+                    it.printStackTrace()
+                }).addTo(disposable)
     }
 
     private fun updateBusData(stopId: String) {
@@ -270,13 +267,11 @@ class MapActivity : AppCompatActivity() {
                 .map { it.results.joinToString("\n") { it.formatBusInfo() } }
                 .subscribeOn(Schedulers.io())
                 .observeOn(AndroidSchedulers.mainThread())
-                .disposingIn(disposable) {
-                    subscribe({
-                        sheetContent.text = it
-                    }, {
-                        it.printStackTrace()
-                    })
-                }
+                .subscribe({
+                    sheetContent.text = it
+                }, {
+                    it.printStackTrace()
+                }).addTo(disposable)
     }
 
     private fun StopInfo.toEntity(): Stop = Stop(stopid, fullname, parseDouble(latitude), parseDouble(longitude))
