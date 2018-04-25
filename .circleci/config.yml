@@ -19,7 +19,7 @@ jobs:
       - checkout
       - run:
           name: Setup environment
-          command: echo "googleMapsApiKey=$GOOGLE_MAPS_API_KEY" > user.properties
+          command: ./circleci_setup.sh
       - restore_cache:
           key: jars-{{ checksum "build.gradle" }}-{{ checksum  "app/build.gradle" }}
       - run:
@@ -31,7 +31,7 @@ jobs:
           key: jars-{{ checksum "build.gradle" }}-{{ checksum  "app/build.gradle" }}
       - run:
           name: Run Tests & Build APK
-          command: ./gradlew lint test assembleDebug
+          command: ./gradlew lint test assembleRelease
       - store_artifacts:
           path: app/build/reports
           destination: reports
