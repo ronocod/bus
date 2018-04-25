@@ -5,5 +5,5 @@ import android.arch.persistence.room.RoomDatabase
 
 @Database(entities = [(Stop::class)], version = 1, exportSchema = false)
 abstract class AppDatabase : RoomDatabase() {
-    abstract fun stops(): StopRepository
+  abstract fun stops(): StopRepository
 }

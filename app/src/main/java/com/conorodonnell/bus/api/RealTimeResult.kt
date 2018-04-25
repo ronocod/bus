@@ -1,6 +1,6 @@
 package com.conorodonnell.bus.api
 
 data class RealTimeResult(
-        val results: List<RealTimeBusInfo>
+    val results: List<RealTimeBusInfo>
 )
 

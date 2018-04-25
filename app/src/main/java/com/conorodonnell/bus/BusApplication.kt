@@ -13,37 +13,37 @@ import retrofit2.converter.moshi.MoshiConverterFactory
 
 class BusApplication : Application() {
 
-    val database by lazy {
-        Room.databaseBuilder(this, AppDatabase::class.java, "bus")
-                .build()
-    }
-    val apiClient: BusApiClient by lazy {
-        val client = OkHttpClient.Builder()
-                .addInterceptor(HttpLoggingInterceptor().apply {
-                    level = HttpLoggingInterceptor.Level.NONE
-                }).build()
-        Retrofit.Builder()
-                .baseUrl("https://data.dublinked.ie/cgi-bin/rtpi/")
-                .client(client)
-                .addConverterFactory(MoshiConverterFactory.create())
-                .addCallAdapterFactory(RxJava2CallAdapterFactory.create())
-                .validateEagerly(true)
-                .build()
-                .create(BusApiClient::class.java)
-    }
+  val database by lazy {
+    Room.databaseBuilder(this, AppDatabase::class.java, "bus")
+        .build()
+  }
+  val apiClient: BusApiClient by lazy {
+    val client = OkHttpClient.Builder()
+        .addInterceptor(HttpLoggingInterceptor().apply {
+          level = HttpLoggingInterceptor.Level.NONE
+        }).build()
+    Retrofit.Builder()
+        .baseUrl("https://data.dublinked.ie/cgi-bin/rtpi/")
+        .client(client)
+        .addConverterFactory(MoshiConverterFactory.create())
+        .addCallAdapterFactory(RxJava2CallAdapterFactory.create())
+        .validateEagerly(true)
+        .build()
+        .create(BusApiClient::class.java)
+  }
 
-    override fun onCreate() {
-        super.onCreate()
-        initialiseComponentsInBackground()
-    }
+  override fun onCreate() {
+    super.onCreate()
+    initialiseComponentsInBackground()
+  }
 
-    private fun initialiseComponentsInBackground() {
-        AsyncTask.execute {
-            // Accessing these properties triggers their lazy initialisation.
-            // Doing this in a background thread on app launch means less blocking of the main thread when they're
-            // accessed for the first time there.
-            apiClient
-            database
-        }
+  private fun initialiseComponentsInBackground() {
+    AsyncTask.execute {
+      // Accessing these properties triggers their lazy initialisation.
+      // Doing this in a background thread on app launch means less blocking of the main thread when they're
+      // accessed for the first time there.
+      apiClient
+      database
     }
+  }
 }
