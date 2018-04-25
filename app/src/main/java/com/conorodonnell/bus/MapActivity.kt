@@ -60,6 +60,7 @@ class MapActivity : AppCompatActivity() {
           .filter { it == 0 }
           .doOnSuccess { showIndefiniteSnackbar("Downloading stops...") }
           .flatMapObservable { apiClient.fetchAllBusStops() }
+          .mergeWith(apiClient.fetchAllLuasStops())
           .subscribeOn(Schedulers.io())
           .subscribe {
             database.stops().insertAll(it.results.map { it.toEntity() })

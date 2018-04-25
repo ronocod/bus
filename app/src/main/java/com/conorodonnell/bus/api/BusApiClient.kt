@@ -10,4 +10,7 @@ interface BusApiClient {
 
   @GET("busstopinformation?operator=bac")
   fun fetchAllBusStops(): Observable<StopResult>
+
+  @GET("busstopinformation?operator=luas")
+  fun fetchAllLuasStops(): Observable<StopResult>
 }
