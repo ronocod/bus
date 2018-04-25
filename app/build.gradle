@@ -7,16 +7,19 @@ apply plugin: 'kotlin-kapt'
 Properties properties = new Properties()
 properties.load(project.rootProject.file('user.properties').newDataInputStream())
 def googleMapsApiKey = properties.getProperty('googleMapsApiKey')
+def storeFilePath = properties.getProperty('storeFile')
 
 android {
     compileSdkVersion 27
 
-    signingConfigs {
-        release {
-            storeFile file(properties.getProperty('storeFile'))
-            storePassword properties.getProperty('storePassword')
-            keyAlias properties.getProperty('keyAlias')
-            keyPassword properties.getProperty('keyPassword')
+    if (storeFilePath) {
+        signingConfigs {
+            release {
+                storeFile file(storeFilePath)
+                storePassword properties.getProperty('storePassword')
+                keyAlias properties.getProperty('keyAlias')
+                keyPassword properties.getProperty('keyPassword')
+            }
         }
     }
 
@@ -34,7 +37,10 @@ android {
         release {
             minifyEnabled false
             proguardFiles getDefaultProguardFile('proguard-android.txt'), 'proguard-rules.pro'
-            signingConfig signingConfigs.release
+
+            if (storeFilePath) {
+                signingConfig signingConfigs.release
+            }
         }
     }
 }
