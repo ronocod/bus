@@ -1,5 +1,8 @@
 package com.conorodonnell.bus.api
 
+import com.squareup.moshi.JsonClass
+
+@JsonClass(generateAdapter = true)
 data class RealTimeBusInfo(
     val arrivaldatetime: String,
     val duetime: String,
