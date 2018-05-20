@@ -40,7 +40,7 @@ android {
         release {
             minifyEnabled true
             shrinkResources true
-            proguardFiles getDefaultProguardFile('proguard-android-optimize.txt'), 'proguard-rules.pro'
+            proguardFiles getDefaultProguardFile('proguard-android.txt'), 'proguard-rules.pro'
 
             if (storeFilePath) {
                 signingConfig signingConfigs.release
@@ -69,8 +69,8 @@ dependencies {
 
     implementation "android.arch.persistence.room:runtime:$versions.room"
     implementation "android.arch.persistence.room:rxjava2:$versions.room"
-    implementation "com.google.android.gms:play-services-maps:$versions.playServices"
-    implementation "com.google.android.gms:play-services-location:$versions.playServices"
+    implementation "com.google.android.gms:play-services-maps:15.0.1"
+    implementation "com.google.android.gms:play-services-location:15.0.1"
 
     implementation 'net.sharewire:google-maps-clustering:0.1.3'
 

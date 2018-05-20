@@ -1,7 +1,6 @@
 buildscript {
     ext.versions = [
             room          : "1.1.0",
-            playServices  : '11.8.0',
             supportLibrary: '27.1.1',
             kotlin        : '1.2.41',
             retrofit      : '2.4.0',
