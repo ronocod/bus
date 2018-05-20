@@ -23,8 +23,8 @@
 
 ### Generic rules
 -keep class com.conorodonnell.** { *; }
--keep class net.sharewire.** { *; }
--keep class com.google.android.gms.** { *; }
+# Maps crashes when this is removed, we can potentially have a more specific exclusion
+-keep class com.google.android.gms.maps.** { *; }
 
 ### RETROFIT 2 https://github.com/square/retrofit#proguard
 
