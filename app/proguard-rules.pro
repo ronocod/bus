@@ -19,3 +19,31 @@
 # If you keep the line number information, uncomment this to
 # hide the original source file name.
 #-renamesourcefileattribute SourceFile
+
+
+### Generic rules
+-keep class com.conorodonnell.** { *; }
+-keep class net.sharewire.** { *; }
+-keep class com.google.android.gms.** { *; }
+
+### RETROFIT 2 https://github.com/square/retrofit#proguard
+
+# Retain generic type information for use by reflection by converters and adapters.
+-keepattributes Signature
+# Retain service method parameters.
+-keepclassmembernames,allowobfuscation interface * {
+    @retrofit2.http.* <methods>;
+}
+# Ignore annotation used for build tooling.
+-dontwarn org.codehaus.mojo.animal_sniffer.IgnoreJRERequirement
+
+### OKIO https://github.com/square/okio#proguard
+-dontwarn okio.**
+
+### OKHTTP https://github.com/square/okhttp#proguard
+-dontwarn okhttp3.**
+-dontwarn okio.**
+-dontwarn javax.annotation.**
+-dontwarn org.conscrypt.**
+# A resource is loaded with a relative path so the package of this class must be preserved.
+-keepnames class okhttp3.internal.publicsuffix.PublicSuffixDatabase

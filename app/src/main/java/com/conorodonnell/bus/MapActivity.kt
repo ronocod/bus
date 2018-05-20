@@ -62,10 +62,10 @@ class MapActivity : AppCompatActivity() {
           .flatMapObservable { apiClient.fetchAllBusStops() }
           .mergeWith(apiClient.fetchAllLuasStops())
           .subscribeOn(Schedulers.io())
-          .subscribe {
+          .subscribe({
             database.stops().insertAll(it.results.map { it.toEntity() })
             runOnUiThread { snackbar?.dismiss() }
-          }.addTo(disposable)
+          }, Throwable::printStackTrace).addTo(disposable)
     }, 500)
 
     if (ContextCompat.checkSelfPermission(this, ACCESS_FINE_LOCATION) != PERMISSION_GRANTED
@@ -164,7 +164,7 @@ class MapActivity : AppCompatActivity() {
         .map { it.map(::BusClusterItem) }
         .subscribeOn(Schedulers.io())
         .observeOn(Schedulers.io())
-        .subscribe(clusterManager::setItems)
+        .subscribe(clusterManager::setItems, Throwable::printStackTrace)
 
     map.setOnMapClickListener {
       lastClickedMarker?.remove()
