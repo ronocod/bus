@@ -8,5 +8,5 @@ data class RealTimeBusInfo(
     val destination: String,
     val origin: String,
     val operator: String,
-    val route: String,
+    val route: String
 )
