@@ -164,7 +164,7 @@ class MapActivity : AppCompatActivity() {
 
     database.stops()
         .findAll()
-        .map { it.map(MapActivity::BusClusterItem) }
+        .map { it.map(::BusClusterItem) }
         .subscribeOn(Schedulers.io())
         .observeOn(Schedulers.io())
         .subscribe(clusterManager::setItems, Throwable::printStackTrace)
