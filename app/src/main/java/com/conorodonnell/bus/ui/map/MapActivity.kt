@@ -1,4 +1,4 @@
-package com.conorodonnell.bus
+package com.conorodonnell.bus.ui.map
 
 import android.Manifest.permission.ACCESS_FINE_LOCATION
 import android.content.Context
@@ -17,6 +17,9 @@ import android.view.View
 import android.widget.SearchView
 import android.widget.Toast
 import android.widget.Toast.LENGTH_SHORT
+import com.conorodonnell.bus.BusApplication
+import com.conorodonnell.bus.R
+import com.conorodonnell.bus.api.RealTimeBusInfo
 import com.conorodonnell.bus.api.StopInfo
 import com.conorodonnell.bus.persistence.Stop
 import com.google.android.gms.location.LocationServices
@@ -161,7 +164,7 @@ class MapActivity : AppCompatActivity() {
 
     database.stops()
         .findAll()
-        .map { it.map(::BusClusterItem) }
+        .map { it.map(MapActivity::BusClusterItem) }
         .subscribeOn(Schedulers.io())
         .observeOn(Schedulers.io())
         .subscribe(clusterManager::setItems, Throwable::printStackTrace)
@@ -252,3 +255,11 @@ class MapActivity : AppCompatActivity() {
   private fun StopInfo.toEntity(): Stop = Stop(stopid, fullname, parseDouble(latitude), parseDouble(longitude))
 
 }
+
+private fun RealTimeBusInfo.formatBusInfo() = "$route to $destination | ${formatDueTime()}"
+
+private fun RealTimeBusInfo.formatDueTime() =
+    when (duetime) {
+      "Due" -> duetime
+      else -> "$duetime mins"
+    }
