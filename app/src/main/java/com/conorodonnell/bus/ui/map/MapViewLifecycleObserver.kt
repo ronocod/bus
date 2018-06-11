@@ -1,4 +1,4 @@
-package com.conorodonnell.bus
+package com.conorodonnell.bus.ui.map
 
 import android.arch.lifecycle.Lifecycle
 import android.arch.lifecycle.LifecycleObserver
