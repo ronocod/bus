@@ -10,75 +10,75 @@ def googleMapsApiKey = properties.getProperty('googleMapsApiKey')
 def storeFilePath = properties.getProperty('storeFile')
 
 android {
-    compileSdkVersion 27
+  compileSdkVersion 27
 
-    if (storeFilePath) {
-        signingConfigs {
-            release {
-                storeFile file(storeFilePath)
-                storePassword properties.getProperty('storePassword')
-                keyAlias properties.getProperty('keyAlias')
-                keyPassword properties.getProperty('keyPassword')
-            }
-        }
+  if (storeFilePath) {
+    signingConfigs {
+      release {
+        storeFile file(storeFilePath)
+        storePassword properties.getProperty('storePassword')
+        keyAlias properties.getProperty('keyAlias')
+        keyPassword properties.getProperty('keyPassword')
+      }
     }
+  }
 
-    defaultConfig {
-        applicationId "com.conorodonnell.bus"
-        minSdkVersion 21
-        targetSdkVersion 27
-        versionCode 4
-        versionName "1.2.${new Date().format('yyyy-MM-dd-HH-mm')}"
-        testInstrumentationRunner "android.support.test.runner.AndroidJUnitRunner"
-        vectorDrawables.useSupportLibrary = true
-        manifestPlaceholders = [mapsApiKey: "$googleMapsApiKey"]
+  defaultConfig {
+    applicationId "com.conorodonnell.bus"
+    minSdkVersion 21
+    targetSdkVersion 27
+    versionCode 4
+    versionName "1.2.${new Date().format('yyyy-MM-dd-HH-mm')}"
+    testInstrumentationRunner "android.support.test.runner.AndroidJUnitRunner"
+    vectorDrawables.useSupportLibrary = true
+    manifestPlaceholders = [mapsApiKey: "$googleMapsApiKey"]
+  }
+  buildTypes {
+    debug {
+      applicationIdSuffix '.debug'
     }
-    buildTypes {
-        debug {
-            applicationIdSuffix '.debug'
-        }
-        release {
-            minifyEnabled true
-            shrinkResources true
-            proguardFiles getDefaultProguardFile('proguard-android.txt'), 'proguard-rules.pro'
+    release {
+      minifyEnabled true
+      shrinkResources true
+      proguardFiles getDefaultProguardFile('proguard-android.txt'), 'proguard-rules.pro'
 
-            if (storeFilePath) {
-                signingConfig signingConfigs.release
-            }
-        }
+      if (storeFilePath) {
+        signingConfig signingConfigs.release
+      }
     }
+  }
 }
 
 dependencies {
-    implementation fileTree(dir: 'libs', include: ['*.jar'])
-    implementation "org.jetbrains.kotlin:kotlin-stdlib-jdk7:$versions.kotlin"
-    implementation "com.android.support:appcompat-v7:$versions.supportLibrary"
-    implementation "com.android.support:design:$versions.supportLibrary"
-    implementation 'com.android.support.constraint:constraint-layout:1.1.2'
-    implementation "com.android.support:support-vector-drawable:$versions.supportLibrary"
-    implementation "com.squareup.retrofit2:retrofit:$versions.retrofit"
-    implementation "com.squareup.retrofit2:adapter-rxjava2:$versions.retrofit"
-    implementation "com.squareup.retrofit2:converter-moshi:$versions.retrofit"
-    implementation "com.squareup.moshi:moshi:1.6.0"
-    implementation 'com.squareup.okhttp3:okhttp:3.10.0'
-    implementation 'com.squareup.okhttp3:logging-interceptor:3.10.0'
+  implementation fileTree(dir: 'libs', include: ['*.jar'])
+  implementation "org.jetbrains.kotlin:kotlin-stdlib-jdk7:$versions.kotlin"
+  implementation "com.android.support:appcompat-v7:$versions.supportLibrary"
+  implementation "com.android.support:design:$versions.supportLibrary"
+  implementation 'com.android.support.constraint:constraint-layout:1.1.2'
+  implementation "com.android.support:support-vector-drawable:$versions.supportLibrary"
+  implementation "com.squareup.retrofit2:retrofit:$versions.retrofit"
+  implementation "com.squareup.retrofit2:adapter-rxjava2:$versions.retrofit"
+  implementation "com.squareup.retrofit2:converter-moshi:$versions.retrofit"
+  implementation "com.squareup.moshi:moshi:1.6.0"
+  implementation 'com.squareup.okhttp3:okhttp:3.10.0'
+  implementation 'com.squareup.okhttp3:logging-interceptor:3.10.0'
 
-    implementation "io.reactivex.rxjava2:rxjava:2.1.15"
-    implementation 'io.reactivex.rxjava2:rxandroid:2.0.2'
-    implementation 'io.reactivex.rxjava2:rxkotlin:2.2.0'
+  implementation "io.reactivex.rxjava2:rxjava:2.1.16"
+  implementation 'io.reactivex.rxjava2:rxandroid:2.0.2'
+  implementation 'io.reactivex.rxjava2:rxkotlin:2.2.0'
 
-    implementation "android.arch.persistence.room:runtime:$versions.room"
-    implementation "android.arch.persistence.room:rxjava2:$versions.room"
-    implementation "com.google.android.gms:play-services-maps:15.0.1"
-    implementation "com.google.android.gms:play-services-location:15.0.1"
+  implementation "android.arch.persistence.room:runtime:$versions.room"
+  implementation "android.arch.persistence.room:rxjava2:$versions.room"
+  implementation "com.google.android.gms:play-services-maps:15.0.1"
+  implementation "com.google.android.gms:play-services-location:15.0.1"
 
-    implementation 'net.sharewire:google-maps-clustering:0.1.3'
+  implementation 'net.sharewire:google-maps-clustering:0.1.3'
 
-    kapt "android.arch.persistence.room:compiler:$versions.room"
-    kapt "android.arch.lifecycle:compiler:1.1.1"
-    kapt 'com.squareup.moshi:moshi-kotlin-codegen:1.6.0'
+  kapt "android.arch.persistence.room:compiler:$versions.room"
+  kapt "android.arch.lifecycle:compiler:1.1.1"
+  kapt 'com.squareup.moshi:moshi-kotlin-codegen:1.6.0'
 
-    testImplementation 'junit:junit:4.12'
-    androidTestImplementation 'com.android.support.test:runner:1.0.2'
-    androidTestImplementation 'com.android.support.test.espresso:espresso-core:3.0.2'
+  testImplementation 'junit:junit:4.12'
+  androidTestImplementation 'com.android.support.test:runner:1.0.2'
+  androidTestImplementation 'com.android.support.test.espresso:espresso-core:3.0.2'
 }
