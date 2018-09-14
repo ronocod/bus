@@ -6,7 +6,7 @@ version: 2
 jobs:
   build:
     docker:
-      - image: circleci/android:api-27-alpha
+      - image: circleci/android:api-28-alpha
 
     working_directory: ~/code
 
@@ -21,14 +21,14 @@ jobs:
           name: Setup environment
           command: ./circleci_setup.sh
       - restore_cache:
-          key: jars-{{ checksum "build.gradle" }}-{{ checksum  "app/build.gradle" }}
+          key: jars-{{ checksum "build.gradle" }}-{{ checksum  "app/build.gradle" }}-1
       - run:
           name: Download Dependencies
           command: ./gradlew androidDependencies
       - save_cache:
           paths:
-            - ~/.gradle
-          key: jars-{{ checksum "build.gradle" }}-{{ checksum  "app/build.gradle" }}
+            - ~/.gradle/caches
+          key: jars-{{ checksum "build.gradle" }}-{{ checksum  "app/build.gradle" }}-1
       - run:
           name: Run Tests & Build APK
           command: ./gradlew lint test assembleRelease

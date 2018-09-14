@@ -10,7 +10,7 @@ def googleMapsApiKey = properties.getProperty('googleMapsApiKey')
 def storeFilePath = properties.getProperty('storeFile')
 
 android {
-  compileSdkVersion 27
+  compileSdkVersion 28
 
   if (storeFilePath) {
     signingConfigs {
@@ -26,7 +26,7 @@ android {
   defaultConfig {
     applicationId "com.conorodonnell.bus"
     minSdkVersion 21
-    targetSdkVersion 27
+    targetSdkVersion 28
     versionCode 4
     versionName "1.2.${new Date().format('yyyy-MM-dd-HH-mm')}"
     testInstrumentationRunner "android.support.test.runner.AndroidJUnitRunner"
