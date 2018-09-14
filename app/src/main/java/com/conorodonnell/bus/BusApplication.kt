@@ -5,6 +5,7 @@ import android.arch.persistence.room.Room
 import android.os.AsyncTask
 import com.conorodonnell.bus.api.BusApiClient
 import com.conorodonnell.bus.persistence.AppDatabase
+import io.reactivex.schedulers.Schedulers
 import okhttp3.OkHttpClient
 import okhttp3.logging.HttpLoggingInterceptor
 import retrofit2.Retrofit
@@ -26,7 +27,7 @@ class BusApplication : Application() {
         .baseUrl("https://data.dublinked.ie/cgi-bin/rtpi/")
         .client(client)
         .addConverterFactory(MoshiConverterFactory.create())
-        .addCallAdapterFactory(RxJava2CallAdapterFactory.create())
+        .addCallAdapterFactory(RxJava2CallAdapterFactory.createWithScheduler(Schedulers.io()))
         .validateEagerly(true)
         .build()
         .create(BusApiClient::class.java)

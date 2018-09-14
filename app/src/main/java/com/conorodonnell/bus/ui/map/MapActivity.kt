@@ -25,18 +25,26 @@ import com.conorodonnell.bus.persistence.Stop
 import com.google.android.gms.location.LocationServices
 import com.google.android.gms.maps.CameraUpdateFactory
 import com.google.android.gms.maps.GoogleMap
-import com.google.android.gms.maps.model.*
+import com.google.android.gms.maps.model.BitmapDescriptor
+import com.google.android.gms.maps.model.BitmapDescriptorFactory
+import com.google.android.gms.maps.model.LatLng
+import com.google.android.gms.maps.model.Marker
+import com.google.android.gms.maps.model.MarkerOptions
 import io.reactivex.android.schedulers.AndroidSchedulers
 import io.reactivex.disposables.CompositeDisposable
-import io.reactivex.rxkotlin.addTo
+import io.reactivex.rxkotlin.plusAssign
 import io.reactivex.schedulers.Schedulers
-import kotlinx.android.synthetic.main.activity_map.*
+import kotlinx.android.synthetic.main.activity_map.bottomSheet
+import kotlinx.android.synthetic.main.activity_map.mapContainer
+import kotlinx.android.synthetic.main.activity_map.mapView
+import kotlinx.android.synthetic.main.activity_map.refreshButton
+import kotlinx.android.synthetic.main.activity_map.sheetContent
+import kotlinx.android.synthetic.main.activity_map.sheetTitle
 import net.sharewire.googlemapsclustering.Cluster
 import net.sharewire.googlemapsclustering.ClusterItem
 import net.sharewire.googlemapsclustering.ClusterManager
 import net.sharewire.googlemapsclustering.DefaultIconGenerator
 import java.lang.Double.parseDouble
-
 
 private const val PREFS = "prefs"
 private const val REQUESTED_LOCATION_PERMISSION = "requested_location_permission"
@@ -59,26 +67,26 @@ class MapActivity : AppCompatActivity() {
     setContentView(R.layout.activity_map)
 
     mapContainer.postDelayed({
-      database.stops().count()
-          .filter { it == 0 }
-          .doOnSuccess { showIndefiniteSnackbar("Downloading stops...") }
-          .flatMapObservable { apiClient.fetchAllBusStops() }
-          .mergeWith(apiClient.fetchAllLuasStops())
-          .subscribeOn(Schedulers.io())
-          .subscribe({
-            database.stops().insertAll(it.results.map { it.toEntity() })
-            runOnUiThread { snackbar?.dismiss() }
-          }, Throwable::printStackTrace).addTo(disposable)
+      disposable += database.stops().count()
+        .filter { it == 0 }
+        .doOnSuccess { showIndefiniteSnackbar("Downloading stops...") }
+        .flatMapSingle { apiClient.fetchAllBusStops() }
+        .mergeWith(apiClient.fetchAllLuasStops())
+        .subscribeOn(Schedulers.io())
+        .subscribe({
+          database.stops().insertAll(it.results.map { it.toEntity() })
+          runOnUiThread { snackbar?.dismiss() }
+        }, Throwable::printStackTrace)
     }, 500)
 
     if (ContextCompat.checkSelfPermission(this, ACCESS_FINE_LOCATION) != PERMISSION_GRANTED
-        && Build.VERSION.SDK_INT >= Build.VERSION_CODES.M
-        && !hasRequestedPermission()) {
+      && Build.VERSION.SDK_INT >= Build.VERSION_CODES.M
+      && !hasRequestedPermission()) {
       requestPermissions(arrayOf(ACCESS_FINE_LOCATION), 17)
       preferences()
-          .edit()
-          .putBoolean(REQUESTED_LOCATION_PERMISSION, true)
-          .apply()
+        .edit()
+        .putBoolean(REQUESTED_LOCATION_PERMISSION, true)
+        .apply()
     }
 
     mapView.onCreate(savedInstanceState)
@@ -93,9 +101,9 @@ class MapActivity : AppCompatActivity() {
     }
   }
 
-  override fun onDestroy() {
-    super.onDestroy()
+  override fun onStop() {
     disposable.clear()
+    super.onStop()
   }
 
   private fun preferences() = getSharedPreferences(PREFS, Context.MODE_PRIVATE)
@@ -135,7 +143,6 @@ class MapActivity : AppCompatActivity() {
   }
 
   private fun setupMap(map: GoogleMap) {
-
     val clusterManager = ClusterManager<BusClusterItem>(this, map)
     map.setOnCameraIdleListener(clusterManager)
     clusterManager.setMinClusterSize(5)
@@ -150,9 +157,9 @@ class MapActivity : AppCompatActivity() {
         val stop = clusterItem.stop
         lastClickedMarker?.remove()
         lastClickedMarker = map.addMarker(MarkerOptions()
-            .icon(clickedMarkerIcon)
-            .zIndex(999f)
-            .position(LatLng(stop.latitude, stop.longitude)))
+          .icon(clickedMarkerIcon)
+          .zIndex(999f)
+          .position(LatLng(stop.latitude, stop.longitude)))
         loadStop(stop.id)
         return false
       }
@@ -162,12 +169,12 @@ class MapActivity : AppCompatActivity() {
       }
     })
 
-    database.stops()
-        .findAll()
-        .map { it.map(::BusClusterItem) }
-        .subscribeOn(Schedulers.io())
-        .observeOn(Schedulers.io())
-        .subscribe(clusterManager::setItems, Throwable::printStackTrace)
+    disposable += database.stops()
+      .findAll()
+      .map { it.map(::BusClusterItem) }
+      .subscribeOn(Schedulers.io())
+      .observeOn(Schedulers.io())
+      .subscribe(clusterManager::setItems, Throwable::printStackTrace)
 
     map.setOnMapClickListener {
       lastClickedMarker?.remove()
@@ -197,14 +204,14 @@ class MapActivity : AppCompatActivity() {
     map.uiSettings.isMyLocationButtonEnabled = true
 
     LocationServices.getFusedLocationProviderClient(this)
-        .lastLocation
-        .addOnSuccessListener { location ->
-          if (location == null) {
-            return@addOnSuccessListener
-          }
-          val latLng = LatLng(location.latitude, location.longitude)
-          map.animateCamera(CameraUpdateFactory.newLatLngZoom(latLng, 16f))
+      .lastLocation
+      .addOnSuccessListener { location ->
+        if (location == null) {
+          return@addOnSuccessListener
         }
+        val latLng = LatLng(location.latitude, location.longitude)
+        map.animateCamera(CameraUpdateFactory.newLatLngZoom(latLng, 16f))
+      }
   }
 
   private var snackbar: Snackbar? = null
@@ -221,20 +228,20 @@ class MapActivity : AppCompatActivity() {
   }
 
   private fun loadStop(stopId: String) {
-    database.stops().findById(stopId)
-        .subscribeOn(Schedulers.io())
-        .observeOn(AndroidSchedulers.mainThread())
-        .subscribe({ stop ->
-          sheetTitle.text = "${stop.id} - ${stop.name}"
-          updateBusData(stopId)
-          mapView.getMapAsync { map ->
-            map.animateCamera(CameraUpdateFactory.newLatLng(LatLng(stop.latitude, stop.longitude)))
-          }
-          sheetBehavior.state = BottomSheetBehavior.STATE_COLLAPSED
-        }, {
-          Toast.makeText(this@MapActivity, "Stop $stopId doesn't exist", LENGTH_SHORT).show()
-          it.printStackTrace()
-        }).addTo(disposable)
+    disposable += database.stops().findById(stopId)
+      .subscribeOn(Schedulers.io())
+      .observeOn(AndroidSchedulers.mainThread())
+      .subscribe({ stop ->
+        sheetTitle.text = "${stop.id} - ${stop.name}"
+        updateBusData(stopId)
+        mapView.getMapAsync { map ->
+          map.animateCamera(CameraUpdateFactory.newLatLng(LatLng(stop.latitude, stop.longitude)))
+        }
+        sheetBehavior.state = BottomSheetBehavior.STATE_COLLAPSED
+      }, {
+        Toast.makeText(this@MapActivity, "Stop $stopId doesn't exist", LENGTH_SHORT).show()
+        it.printStackTrace()
+      })
   }
 
   private fun updateBusData(stopId: String) {
@@ -242,14 +249,13 @@ class MapActivity : AppCompatActivity() {
     refreshButton.setOnClickListener {
       updateBusData(stopId)
     }
-    apiClient.fetchRealTimeInfo(stopId)
-        .map { it.results.joinToString("\n") { it.formatBusInfo() } }
-        .subscribeOn(Schedulers.io())
-        .observeOn(AndroidSchedulers.mainThread())
-        .subscribe({
-          sheetContent.text = it
-        }, Throwable::printStackTrace)
-        .addTo(disposable)
+    disposable += apiClient.fetchRealTimeInfo(stopId)
+      .map { it.results.joinToString("\n") { it.formatBusInfo() } }
+      .subscribeOn(Schedulers.io())
+      .observeOn(AndroidSchedulers.mainThread())
+      .subscribe({
+        sheetContent.text = it
+      }, Throwable::printStackTrace)
   }
 
   private fun StopInfo.toEntity(): Stop = Stop(stopid, fullname, parseDouble(latitude), parseDouble(longitude))
@@ -259,7 +265,7 @@ class MapActivity : AppCompatActivity() {
 private fun RealTimeBusInfo.formatBusInfo() = "$route to $destination | ${formatDueTime()}"
 
 private fun RealTimeBusInfo.formatDueTime() =
-    when (duetime) {
-      "Due" -> duetime
-      else -> "$duetime mins"
-    }
+  when (duetime) {
+    "Due" -> duetime
+    else -> "$duetime mins"
+  }
