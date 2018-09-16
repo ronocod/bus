@@ -3,8 +3,11 @@ package com.conorodonnell.bus
 import android.app.Application
 import android.arch.persistence.room.Room
 import android.os.AsyncTask
+import android.os.Looper
 import com.conorodonnell.bus.api.BusApiClient
 import com.conorodonnell.bus.persistence.AppDatabase
+import io.reactivex.android.plugins.RxAndroidPlugins
+import io.reactivex.android.schedulers.AndroidSchedulers
 import io.reactivex.schedulers.Schedulers
 import okhttp3.OkHttpClient
 import okhttp3.logging.HttpLoggingInterceptor
@@ -16,24 +19,28 @@ class BusApplication : Application() {
 
   val database by lazy {
     Room.databaseBuilder(this, AppDatabase::class.java, "bus")
-        .build()
+      .build()
   }
   val apiClient: BusApiClient by lazy {
     val client = OkHttpClient.Builder()
-        .addInterceptor(HttpLoggingInterceptor().apply {
-          level = HttpLoggingInterceptor.Level.NONE
-        }).build()
+      .addInterceptor(HttpLoggingInterceptor().apply {
+        level = HttpLoggingInterceptor.Level.NONE
+      }).build()
     Retrofit.Builder()
-        .baseUrl("https://data.dublinked.ie/cgi-bin/rtpi/")
-        .client(client)
-        .addConverterFactory(MoshiConverterFactory.create())
-        .addCallAdapterFactory(RxJava2CallAdapterFactory.createWithScheduler(Schedulers.io()))
-        .validateEagerly(true)
-        .build()
-        .create(BusApiClient::class.java)
+      .baseUrl("https://data.dublinked.ie/cgi-bin/rtpi/")
+      .client(client)
+      .addConverterFactory(MoshiConverterFactory.create())
+      .addCallAdapterFactory(RxJava2CallAdapterFactory.createWithScheduler(Schedulers.io()))
+      .validateEagerly(true)
+      .build()
+      .create(BusApiClient::class.java)
   }
 
   override fun onCreate() {
+    RxAndroidPlugins.setMainThreadSchedulerHandler {
+      AndroidSchedulers.from(Looper.getMainLooper(), true)
+    }
+
     super.onCreate()
     initialiseComponentsInBackground()
   }
