@@ -77,9 +77,9 @@ class MapActivity : AppCompatActivity() {
         .subscribeOn(Schedulers.io())
         .doOnNext { database.stops().insertAll(it.results.map { it.toEntity() }) }
         .observeOn(AndroidSchedulers.mainThread())
-        .subscribe({
+        .subscribeBy(onComplete = {
           snackbar?.dismiss()
-        }, Throwable::printStackTrace)
+        }, onError = Throwable::printStackTrace)
     }, 500)
 
     if (ContextCompat.checkSelfPermission(this, ACCESS_FINE_LOCATION) != PERMISSION_GRANTED
@@ -119,6 +119,18 @@ class MapActivity : AppCompatActivity() {
       return super.onCreateOptionsMenu(menu)
     }
     menuInflater.inflate(R.menu.main, menu)
+
+    menu.findItem(R.id.menu_refresh)
+      .setOnMenuItemClickListener {
+        Completable.fromRunnable {
+          database.clearAllTables()
+        }.subscribeOn(Schedulers.io())
+          .observeOn(AndroidSchedulers.mainThread())
+          .subscribeBy(onComplete = {
+            recreate()
+          }, onError = Throwable::printStackTrace)
+        true
+      }
 
     val searchItem = menu.findItem(R.id.menu_search)
     val searchView = searchItem.actionView as SearchView

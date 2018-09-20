@@ -9,5 +9,8 @@
         app:actionViewClass="android.widget.SearchView"
         app:showAsAction="always"/>
 
-
+    <item
+        android:id="@+id/menu_refresh"
+        android:title="Refresh data"
+        app:showAsAction="never"/>
 </menu>
