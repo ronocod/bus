@@ -30,9 +30,11 @@ import com.google.android.gms.maps.model.BitmapDescriptorFactory
 import com.google.android.gms.maps.model.LatLng
 import com.google.android.gms.maps.model.Marker
 import com.google.android.gms.maps.model.MarkerOptions
+import io.reactivex.Completable
 import io.reactivex.android.schedulers.AndroidSchedulers
 import io.reactivex.disposables.CompositeDisposable
 import io.reactivex.rxkotlin.plusAssign
+import io.reactivex.rxkotlin.subscribeBy
 import io.reactivex.schedulers.Schedulers
 import kotlinx.android.synthetic.main.activity_map.bottomSheet
 import kotlinx.android.synthetic.main.activity_map.mapContainer
@@ -73,9 +75,10 @@ class MapActivity : AppCompatActivity() {
         .flatMapSingle { apiClient.fetchAllBusStops() }
         .mergeWith(apiClient.fetchAllLuasStops())
         .subscribeOn(Schedulers.io())
+        .doOnNext { database.stops().insertAll(it.results.map { it.toEntity() }) }
+        .observeOn(AndroidSchedulers.mainThread())
         .subscribe({
-          database.stops().insertAll(it.results.map { it.toEntity() })
-          runOnUiThread { snackbar?.dismiss() }
+          snackbar?.dismiss()
         }, Throwable::printStackTrace)
     }, 500)
 
@@ -95,10 +98,11 @@ class MapActivity : AppCompatActivity() {
   }
 
   private fun showIndefiniteSnackbar(message: String) {
-    runOnUiThread {
+    Completable.fromCallable {
       snackbar = Snackbar.make(mapContainer, message, LENGTH_INDEFINITE)
       snackbar?.show()
-    }
+    }.subscribeOn(AndroidSchedulers.mainThread())
+      .subscribeBy(onError = Throwable::printStackTrace)
   }
 
   override fun onStop() {
