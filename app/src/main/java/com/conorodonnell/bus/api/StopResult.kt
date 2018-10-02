@@ -4,5 +4,5 @@ import com.squareup.moshi.JsonClass
 
 @JsonClass(generateAdapter = true)
 data class StopResult(
-    val results: List<StopInfo>
+  val results: List<StopInfo>
 )

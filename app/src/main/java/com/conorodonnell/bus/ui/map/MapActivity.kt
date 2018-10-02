@@ -56,7 +56,9 @@ class MapActivity : AppCompatActivity() {
   private val apiClient by lazy { (application as BusApplication).apiClient }
   private val database by lazy { (application as BusApplication).database }
   private val defaultMarkerIcon by lazy { BitmapDescriptorFactory.defaultMarker() }
-  private val clickedMarkerIcon by lazy { BitmapDescriptorFactory.defaultMarker(BitmapDescriptorFactory.HUE_AZURE) }
+  private val clickedMarkerIcon by lazy {
+    BitmapDescriptorFactory.defaultMarker(BitmapDescriptorFactory.HUE_AZURE)
+  }
 
   private var lastClickedMarker: Marker? = null
 
@@ -82,9 +84,9 @@ class MapActivity : AppCompatActivity() {
         }, onError = Throwable::printStackTrace)
     }, 500)
 
-    if (ContextCompat.checkSelfPermission(this, ACCESS_FINE_LOCATION) != PERMISSION_GRANTED
-      && Build.VERSION.SDK_INT >= Build.VERSION_CODES.M
-      && !hasRequestedPermission()) {
+    if (ContextCompat.checkSelfPermission(this, ACCESS_FINE_LOCATION) != PERMISSION_GRANTED &&
+      Build.VERSION.SDK_INT >= Build.VERSION_CODES.M &&
+      !hasRequestedPermission()) {
       requestPermissions(arrayOf(ACCESS_FINE_LOCATION), 17)
       preferences()
         .edit()
@@ -112,7 +114,10 @@ class MapActivity : AppCompatActivity() {
 
   private fun preferences() = getSharedPreferences(PREFS, Context.MODE_PRIVATE)
 
-  private fun hasRequestedPermission() = preferences().getBoolean(REQUESTED_LOCATION_PERMISSION, false)
+  private fun hasRequestedPermission() = preferences().getBoolean(
+    REQUESTED_LOCATION_PERMISSION,
+    false
+  )
 
   override fun onCreateOptionsMenu(menu: Menu?): Boolean {
     if (menu == null) {
@@ -209,7 +214,6 @@ class MapActivity : AppCompatActivity() {
       }
 
       override fun onSlide(bottomSheet: View, slideOffset: Float) {
-
       }
     })
 
@@ -232,7 +236,11 @@ class MapActivity : AppCompatActivity() {
 
   private var snackbar: Snackbar? = null
 
-  override fun onRequestPermissionsResult(requestCode: Int, permissions: Array<out String>, grantResults: IntArray) {
+  override fun onRequestPermissionsResult(
+    requestCode: Int,
+    permissions: Array<out String>,
+    grantResults: IntArray
+  ) {
     super.onRequestPermissionsResult(requestCode, permissions, grantResults)
 
     if (grantResults.isEmpty()) {
@@ -274,8 +282,13 @@ class MapActivity : AppCompatActivity() {
       }, Throwable::printStackTrace)
   }
 
-  private fun StopInfo.toEntity(): Stop = Stop(stopid, fullname, parseDouble(latitude), parseDouble(longitude))
-
+  private fun StopInfo.toEntity(): Stop =
+    Stop(
+      stopid,
+      fullname,
+      parseDouble(latitude),
+      parseDouble(longitude)
+    )
 }
 
 private fun RealTimeBusInfo.formatBusInfo() = "$route to $destination | ${formatDueTime()}"

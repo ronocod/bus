@@ -4,6 +4,5 @@ import com.squareup.moshi.JsonClass
 
 @JsonClass(generateAdapter = true)
 data class RealTimeResult(
-    val results: List<RealTimeBusInfo>
+  val results: List<RealTimeBusInfo>
 )
-
