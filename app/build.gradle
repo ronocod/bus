@@ -28,7 +28,7 @@ android {
     minSdkVersion 21
     targetSdkVersion 28
     versionCode 6
-    versionName "1.2.${new Date().format('yyyy-MM-dd-HH-mm')}"
+    versionName "1.2'
     testInstrumentationRunner "android.support.test.runner.AndroidJUnitRunner"
     vectorDrawables.useSupportLibrary = true
     manifestPlaceholders = [mapsApiKey: "$googleMapsApiKey"]
@@ -36,11 +36,13 @@ android {
   buildTypes {
     debug {
       applicationIdSuffix '.debug'
+      versionNameSuffix '-dev'
     }
     release {
       minifyEnabled true
       shrinkResources true
       proguardFiles getDefaultProguardFile('proguard-android.txt'), 'proguard-rules.pro'
+      versionNameSuffix new Date().format('yyyy-MM-dd-HH-mm')
 
       if (storeFilePath) {
         signingConfig signingConfigs.release
