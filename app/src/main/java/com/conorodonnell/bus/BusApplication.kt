@@ -27,7 +27,7 @@ class BusApplication : Application() {
         level = HttpLoggingInterceptor.Level.NONE
       }).build()
     Retrofit.Builder()
-      .baseUrl("https://data.dublinked.ie/cgi-bin/rtpi/")
+      .baseUrl("https://rtpiapp.rtpi.openskydata.com/RTPIPublicService_V2/service.svc/")
       .client(client)
       .addConverterFactory(MoshiConverterFactory.create())
       .addCallAdapterFactory(RxJava2CallAdapterFactory.createWithScheduler(Schedulers.io()))
