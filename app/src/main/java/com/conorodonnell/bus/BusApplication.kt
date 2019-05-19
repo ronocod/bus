@@ -9,6 +9,7 @@ import com.conorodonnell.bus.persistence.AppDatabase
 import io.reactivex.android.plugins.RxAndroidPlugins
 import io.reactivex.android.schedulers.AndroidSchedulers
 import io.reactivex.schedulers.Schedulers
+import okhttp3.ConnectionSpec
 import okhttp3.OkHttpClient
 import okhttp3.logging.HttpLoggingInterceptor
 import retrofit2.Retrofit
@@ -24,6 +25,7 @@ class BusApplication : Application() {
   }
   val apiClient: BusApiClient by lazy {
     val client = OkHttpClient.Builder()
+      .connectionSpecs(listOf(ConnectionSpec.COMPATIBLE_TLS))
       .addInterceptor(HttpLoggingInterceptor().apply {
         level = HttpLoggingInterceptor.Level.NONE
       }).build()
