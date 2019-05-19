@@ -276,7 +276,7 @@ class MapActivity : AppCompatActivity() {
       updateBusData(stopId)
     }
     disposable += apiClient.fetchRealTimeInfo(stopId)
-      .map { it.results.joinToString("\n") { it.formatBusInfo() } }
+      .map { formatResults(it.results) }
       .subscribeOn(Schedulers.io())
       .observeOn(AndroidSchedulers.mainThread())
       .subscribe({
@@ -293,10 +293,11 @@ class MapActivity : AppCompatActivity() {
     )
 }
 
-private fun RealTimeBusInfo.formatBusInfo() = "$route to $destination | ${formatDueTime()}"
+private fun formatResults(results: List<RealTimeBusInfo>): String {
+  val routes = results.groupBy { "${it.route} to ${it.destination}" }
+  return routes.entries.joinToString("\n") { "${it.key} | ${formatTimes(it.value)} mins" }
+}
 
-private fun RealTimeBusInfo.formatDueTime() =
-  when (duetime) {
-    "Due" -> duetime
-    else -> "$duetime mins"
-  }
+private fun formatTimes(infos: List<RealTimeBusInfo>) =
+  infos.joinToString(", ") { it.duetime }
+
