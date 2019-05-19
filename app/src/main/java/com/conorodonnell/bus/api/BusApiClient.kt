@@ -13,4 +13,7 @@ interface BusApiClient {
 
   @GET("busstopinformation?operator=luas")
   fun fetchAllLuasStops(): Single<StopResult>
+
+  @GET("busstopinformation?operator=ir")
+  fun fetchAllRailStops(): Single<StopResult>
 }

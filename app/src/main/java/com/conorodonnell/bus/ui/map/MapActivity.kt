@@ -76,6 +76,7 @@ class MapActivity : AppCompatActivity() {
         .doOnSuccess { showIndefiniteSnackbar("Downloading stops...") }
         .flatMapSingle { apiClient.fetchAllBusStops() }
         .mergeWith(apiClient.fetchAllLuasStops())
+        .mergeWith(apiClient.fetchAllRailStops())
         .subscribeOn(Schedulers.io())
         .doOnNext { database.stops().insertAll(it.results.map { it.toEntity() }) }
         .observeOn(AndroidSchedulers.mainThread())
@@ -256,7 +257,8 @@ class MapActivity : AppCompatActivity() {
       .subscribeOn(Schedulers.io())
       .observeOn(AndroidSchedulers.mainThread())
       .subscribe({ stop ->
-        sheetTitle.text = "${stop.id} - ${stop.name}"
+        val nameSuffix = stop.name?.takeIf { it.isNotBlank() }?.let { " - " + stop.name } ?: ""
+        sheetTitle.text = "${stop.id}$nameSuffix"
         updateBusData(stopId)
         mapView.getMapAsync { map ->
           map.animateCamera(CameraUpdateFactory.newLatLng(LatLng(stop.latitude, stop.longitude)))

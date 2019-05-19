@@ -12,6 +12,7 @@ import io.reactivex.schedulers.Schedulers
 import okhttp3.OkHttpClient
 import okhttp3.logging.HttpLoggingInterceptor
 import retrofit2.Retrofit
+import retrofit2.create
 import retrofit2.adapter.rxjava2.RxJava2CallAdapterFactory
 import retrofit2.converter.moshi.MoshiConverterFactory
 
@@ -33,7 +34,7 @@ class BusApplication : Application() {
       .addCallAdapterFactory(RxJava2CallAdapterFactory.createWithScheduler(Schedulers.io()))
       .validateEagerly(true)
       .build()
-      .create(BusApiClient::class.java)
+      .create<BusApiClient>()
   }
 
   override fun onCreate() {
