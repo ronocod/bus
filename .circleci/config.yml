@@ -6,7 +6,7 @@ version: 2.1
 jobs:
   build_and_test_job:
     docker:
-      - image: circleci/android:api-28-alpha
+      - image: circleci/android:api-29
 
     working_directory: ~/code
 
