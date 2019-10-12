@@ -1,9 +1,9 @@
 package com.conorodonnell.bus
 
 import android.app.Application
-import android.arch.persistence.room.Room
 import android.os.AsyncTask
 import android.os.Looper
+import androidx.room.Room
 import com.conorodonnell.bus.api.BusApiClient
 import com.conorodonnell.bus.persistence.AppDatabase
 import io.reactivex.android.plugins.RxAndroidPlugins
@@ -21,6 +21,7 @@ class BusApplication : Application() {
 
   val database by lazy {
     Room.databaseBuilder(this, AppDatabase::class.java, "bus")
+      .fallbackToDestructiveMigration()
       .build()
   }
   val apiClient: BusApiClient by lazy {
