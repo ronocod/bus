@@ -10,7 +10,7 @@ def googleMapsApiKey = properties.getProperty('googleMapsApiKey')
 def storeFilePath = properties.getProperty('storeFile')
 
 android {
-  compileSdkVersion 28
+  compileSdkVersion 29
 
   if (storeFilePath) {
     signingConfigs {
