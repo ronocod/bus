@@ -8,6 +8,7 @@ import com.conorodonnell.bus.api.BusApiClient
 import com.conorodonnell.bus.persistence.AppDatabase
 import io.reactivex.android.plugins.RxAndroidPlugins
 import io.reactivex.android.schedulers.AndroidSchedulers
+import io.reactivex.plugins.RxJavaPlugins
 import io.reactivex.schedulers.Schedulers
 import okhttp3.ConnectionSpec
 import okhttp3.OkHttpClient
@@ -44,6 +45,7 @@ class BusApplication : Application() {
     RxAndroidPlugins.setMainThreadSchedulerHandler {
       AndroidSchedulers.from(Looper.getMainLooper(), true)
     }
+    RxJavaPlugins.setErrorHandler(Throwable::printStackTrace)
 
     super.onCreate()
     initialiseComponentsInBackground()
