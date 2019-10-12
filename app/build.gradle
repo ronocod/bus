@@ -10,7 +10,7 @@ def googleMapsApiKey = properties.getProperty('googleMapsApiKey')
 def storeFilePath = properties.getProperty('storeFile')
 
 android {
-  compileSdkVersion 28
+  compileSdkVersion 29
 
   if (storeFilePath) {
     signingConfigs {
@@ -26,7 +26,7 @@ android {
   defaultConfig {
     applicationId "com.conorodonnell.bus"
     minSdkVersion 21
-    targetSdkVersion 28
+    targetSdkVersion 29
     versionCode 8
     versionName "1.4."
     vectorDrawables.useSupportLibrary = true
