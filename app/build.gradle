@@ -67,17 +67,17 @@ dependencies {
   implementation "com.squareup.retrofit2:adapter-rxjava2:$versions.retrofit"
   implementation "com.squareup.retrofit2:converter-moshi:$versions.retrofit"
   implementation "com.squareup.moshi:moshi:1.8.0"
-  implementation 'com.squareup.okhttp3:okhttp:3.14.1'
-  implementation 'com.squareup.okhttp3:logging-interceptor:3.14.1'
+  implementation 'com.squareup.okhttp3:okhttp:3.14.4'
+  implementation 'com.squareup.okhttp3:logging-interceptor:3.14.4'
 
-  implementation "io.reactivex.rxjava2:rxjava:2.2.8"
+  implementation "io.reactivex.rxjava2:rxjava:2.2.13"
   implementation 'io.reactivex.rxjava2:rxandroid:2.1.1'
-  implementation 'io.reactivex.rxjava2:rxkotlin:2.3.0'
+  implementation 'io.reactivex.rxjava2:rxkotlin:2.4.0'
 
   implementation "android.arch.persistence.room:runtime:$versions.room"
   implementation "android.arch.persistence.room:rxjava2:$versions.room"
-  implementation "com.google.android.gms:play-services-maps:16.1.0"
-  implementation "com.google.android.gms:play-services-location:16.0.0"
+  implementation "com.google.android.gms:play-services-maps:17.0.0"
+  implementation "com.google.android.gms:play-services-location:17.0.0"
 
   implementation 'net.sharewire:google-maps-clustering:0.1.3'
 
